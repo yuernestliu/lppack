@@ -1,0 +1,15 @@
+v2.0    新版本的第一次release
+v2.0.1  修复了完全由basic building block构成序列造成的bug
+	修改了梯图的展示方式
+v2.0.2  修改了以致可以处理targets中有重复的情况，
+	修正了get_ladderpath, POM_from_JSON, draw_laddergraph
+	增加了计算eta的函数
+v2.0.3	修改了计算和更新eta的函数，更新了json中存储eta的方式（V1.0.1.20240928_Alpha）
+
+
+
+======
+compress  
+v2.0.1  修改了以致可以处理targets中有重复的情况
+
+
