@@ -1,14 +1,13 @@
 """
-Version 2.0.3
-Authors: Dinger & ecsLab (Yu Liu, Jingwen Zhang, et al.)
-Data: 2024.09.28
+Version 2.0.8
+Authors: ecsLab (Yu Liu, Jingwen Zhang, et al.) & Dinger
+Data: 2025.03.18
 
 梯径的标准化格式 输出, V1.0.1.20240928_Alpha
 (& 清空/填满缓存 & 读取JSON文档 & 偏序多重集表示 & 梯图表示)
 """
 
 
-import re
 import json
 import heapq
 from time import time
@@ -101,6 +100,15 @@ def find_components(ss: List[LadderonRef]) -> List[Dict[str, List[Tuple[int, int
     ## 最后result是所有基础单元和重复结构的字典，值是对应的[(上家梯元id,起始位置),...]
     return result
 
+def find_all(a: str, b: str):
+    index = 0
+    while True:
+        index = a.find(b, index)
+        if index == -1:
+            return
+        yield index
+        index += 1
+
 def find_components_with_c(ss: List[LadderonRef], luts: List[Dict[int, List[int]]], p: Pattern) -> List[Tuple[int, int]]:
     if p.update >= len(luts):
         ## 如果p.update大于或等于luts中梯元的个数，说明不需要进一步扩展或更新。
@@ -108,7 +116,6 @@ def find_components_with_c(ss: List[LadderonRef], luts: List[Dict[int, List[int]
         ## 确保p.update与luts的长度相等，如果相等，直接返回当前模式p的匹配位置p.idxs。
         return p.idxs
     ## 如果p.update小于luts的长度
-    cp = re.compile(p.s)
     new_idxs = []
     grouped_idxs = defaultdict(list)
     for idx_s, idx_c in p.idxs:
@@ -133,8 +140,8 @@ def find_components_with_c(ss: List[LadderonRef], luts: List[Dict[int, List[int]
                 idx_ss = next_idx_ss
             for i in idx_ss:
                 ## 在target里面找
-                for it in cp.finditer(ss[i].s):
-                    new_idxs.append((i, it.start()))
+                for it in find_all(ss[i].s, p.s):
+                    new_idxs.append((i, it))
         else:
             ## 如果不需要更新的话，直接把整理好的id变回原本[（ID，开始位置）,...]的形式
             for idx_c in idx_cs:
@@ -300,9 +307,15 @@ def find_ladderpath(ss: List[str]) -> Tuple[int, int, int, List[Ladderon]]:
 def get_ladderpath(targets0: List[str], 
     info='V1.0.1.20240928_Alpha', 
     estimate_eta = False, # 是否需要估算eta
-    estimate_eta_para = [10, 'global'], # 计算eta时，需要几次以计算omega_min，采用哪种方法
+    estimate_eta_para = {}, # 具体计算eta的方法
     save_file_name=None, 
     show_version=True) -> dict: #输出是梯径的JSON标准格式
+    
+    if estimate_eta: # 计算eta
+        if len(estimate_eta_para) == 0:
+            print('Wrong: you must set estimate_eta_para. Abort.')
+            print("       e.g., estimate_eta_para={'n': 10, 'max_method': 'AllIdentical', 'min_method': 'EvenDist', 'min_method_nBase': 20)")
+            return
 
     if not valid_input(targets0): # 判断targets0是否在合法的
         print('Wrong: Input is not valid!!!')
@@ -401,7 +414,7 @@ def get_ladderpath(targets0: List[str],
             data["ladderpath-index"] += extra_duplications
             data["size-index"] += (extra_duplications * len(s))
 
-            if len(thisInfoList[0]) > 1: #表明 该s还不是梯元，则要将其放入梯元(否则 该s已经既是target也是梯元）
+            if _for_duplications_info_ladderonExist(thisInfoList[0]): #表明 该s还不是梯元，则要将其放入梯元(否则 该s已经既是target也是梯元）
                 newLadderonID = len(data['ladderons'])
                 data['ladderons'][newLadderonID] = thisInfoList[:3] + [{ thisTargetID:[0] }]
                 thisInfoList[0] = [newLadderonID]
@@ -412,28 +425,28 @@ def get_ladderpath(targets0: List[str],
             temp_dup_info[val[0]] = val[1:]
         data["order-index"] = data["size-index"] - data["ladderpath-index"]
         data['duplications_info'] = temp_dup_info
-    
-    if estimate_eta: # 计算eta，这里默认使用global方法: omega_max_AllIdentical & omega_min_Shuffle_list
-        if estimate_eta_para[1] == 'global':
-            combined_str = ''.join(targets0)
-            omega_max = cal_omega_max_AllIdentical(combined_str)
-            data['eta_info']['omega_max_AllIdentical'] = omega_max
-
-            temp_list = cal_omega_min_Shuffle_list(combined_str, estimate_eta_para[0])
-            data['eta_info']['omega_min_Shuffle_list'] = temp_list
-            omega_min = min(temp_list)
-
-            data['eta'] = (data['order-index'] - omega_min) / (omega_max - omega_min)
-        else:
-            print('Warning: estimate_eta_para[1] is not global, abort function.')
-
 
     # 将处理好的格式导入JSON文件
     if save_file_name:
         save_file_name += '.json' if not save_file_name.endswith('.json') else ''
         save_ladderpath_json(data, save_file_name)
 
+    if estimate_eta: # 计算eta
+        get_eta(data, estimate_eta_para, targets_known=ss, use_as_update=False)
+
     return data
+
+def _for_duplications_info_ladderonExist(thisInfoList_0): # thisInfoList_0 is thisInfoList[0]
+    #表明 该s还不是梯元，则要将其放入梯元(否则 该s已经既是target也是梯元）
+    if len(thisInfoList_0) > 1:
+        return True
+    if isinstance(thisInfoList_0[0], int):
+        return False
+    else:
+        if len(thisInfoList_0[0]) > 1:
+            return True
+    return False
+
 
 
 # 将targets序列去重
@@ -601,10 +614,22 @@ def disp3index(lpjson):
 
 
 # 如果eta存在，则取出；如果不存在，则计算
-def get_eta(lpjson, estimate_eta_para=[10, 'global'], use_as_update=False):
+def get_eta(lpjson, estimate_eta_para={}, \
+    targets_known=None, use_as_update=False): 
+    # targets_known: 用在get_ladderpath函数中，直接传入targets0而不用再通过lpjson计算,这个参数不允许外部设置
     # use_as_update=False 这个参数不允许外部设为 True
-    if (lpjson['eta'] is not None) and (not use_as_update):
-        return lpjson['eta']
+
+    if not use_as_update: #如果不是update，那么就直接读取已经有的eta
+        omega_max = lpjson['eta_info']['omega_max_'+estimate_eta_para['max_method']]
+        omega_min_list = lpjson['eta_info']['omega_min_'+estimate_eta_para['min_method']+'_list']
+        if omega_max and omega_min_list:
+            omega_min = min(omega_min_list)
+            eta = (lpjson['order-index'] - omega_min) / (omega_max - omega_min)
+            lpjson['eta'] = eta
+            return eta
+
+    if targets_known:
+        combined_str = ''.join(targets_known)
     else:
         fill_lpjson_STR(lpjson)
         targets_list = reconstruct_targets_list(lpjson)
@@ -615,27 +640,60 @@ def get_eta(lpjson, estimate_eta_para=[10, 'global'], use_as_update=False):
             combined_str_list.append( temp[2] )
         combined_str = ''.join(combined_str_list)
 
-        if use_as_update:
-            omega_max = lpjson['eta_info']['omega_max_AllIdentical']
+    try:
+        if estimate_eta_para['max_method'] == 'AllIdentical':# 这里是计算关于omega_max
+            if use_as_update:
+                omega_max = lpjson['eta_info']['omega_max_AllIdentical']
+            else:
+                omega_max = cal_omega_max_AllIdentical(combined_str)
+                lpjson['eta_info']['omega_max_AllIdentical'] = omega_max
+        elif estimate_eta_para['max_method'] == 'Sorted':
+            if use_as_update:
+                omega_max = lpjson['eta_info']['omega_max_Sorted']
+            else:
+                omega_max = cal_omega_max_Sorted(combined_str)
+                lpjson['eta_info']['omega_max_Sorted'] = omega_max
         else:
-            omega_max = cal_omega_max_AllIdentical(combined_str)
-            lpjson['eta_info']['omega_max_AllIdentical'] = omega_max
+            print('Warning: settings in get_eta() are wrong, abort function.')
+            return
 
-        # 计算omega_min: 计算N_omega_min次，取最小的
-        omega_min_list = cal_omega_min_Shuffle_list(combined_str, estimate_eta_para[0])
-        if use_as_update:
-            lpjson['eta_info']['omega_min_Shuffle_list'].extend( omega_min_list )
+        # 这里是计算关于omega_min。计算n次，取最小的
+        nMin = estimate_eta_para['n']
+        if estimate_eta_para['min_method'] == 'Shuffle':
+            temp_list = cal_omega_min_Shuffle_list(combined_str, nMin)
+            if use_as_update:
+                lpjson['eta_info']['omega_min_Shuffle_list'].extend(temp_list)
+            else:
+                lpjson['eta_info']['omega_min_Shuffle_list'] = temp_list
+            omega_min = min(lpjson['eta_info']['omega_min_Shuffle_list'])
+        elif estimate_eta_para['min_method'] == 'EvenDist':
+            nBase = estimate_eta_para['min_method_nBase']
+            temp_list = cal_omega_min_EvenDist_list(combined_str, nBase, nMin)
+            if use_as_update:
+                lpjson['eta_info']['omega_min_EvenDist_list'].extend(temp_list)
+            else:
+                lpjson['eta_info']['omega_min_EvenDist_list'] = temp_list
+            omega_min = min(lpjson['eta_info']['omega_min_EvenDist_list'])
+        # elif estimate_eta_para['min_method'] == 'LocalDist':
+        #     cal_omega_min_LocalDist_list()
         else:
-            lpjson['eta_info']['omega_min_Shuffle_list'] = omega_min_list
-        omega_min = min(lpjson['eta_info']['omega_min_Shuffle_list'])
-        
-        eta = (lpjson['order-index'] - omega_min) / (omega_max - omega_min)
-        lpjson['eta'] = eta
-        return eta
+            print('Warning: settings in get_eta() are wrong, abort function.')
+            return
+    except:
+        print('Warning: settings in get_eta() are wrong, abort function.')
 
-def update_eta(lpjson, estimate_eta_para=[10, 'global']): #更新eta值，即多增加N_omega_min次计算omega_min
-    if lpjson['eta'] is None:
-        print('Wrong & Abort: There is no eta value. get_eta() first and then update_eta().')
+    eta = (lpjson['order-index'] - omega_min) / (omega_max - omega_min)
+    lpjson['eta'] = eta
+    return eta
+
+
+#更新eta值，即多增加N_omega_min次计算omega_min
+def update_eta(lpjson, estimate_eta_para={}):
+    if (lpjson['eta'] is None) \
+        or (lpjson['eta_info']['omega_max_'+estimate_eta_para['max_method']] is None) \
+        or (len(lpjson['eta_info']['omega_min_'+estimate_eta_para['min_method']+'_list'])==0):
+        print('Wrong & Abort: There is no eta value existed, under the same estimate_eta_para.')
+        print('               get_eta() first and then update_eta().')
         return
     else:
         get_eta(lpjson, estimate_eta_para, use_as_update=True)
@@ -649,19 +707,23 @@ def ellipse_len(seq): # 画梯图的associated函数
     return length
 
 def draw_laddergraph(lpjson, show_longer_than = 0, style = "ellipse", 
+    TargetNames_UserDefined = {},
     warning_n_ladderons_to_show = 500,
-    rankdir = "BT", color = "grey",
+    rankdir = "BT", color = "grey", figsize = None,
     save_fig_name = None, figformat = "pdf", cleanGVfile=True):
     # Draw the laddergraph.
     # "show_longer_than": When the length of the ladderon > show_longer_than, this ladderon will be displayed.
     #     Note that "show_longer_than" should always be >= 1, and the basic building blocks are also omitted.
     # "style" dictates how the laddergraph is displayed. It can either be 
     #     "ellipse" (the sequence won't be displayed, but the size of the ellipse is positively related to the length of the sequence),
+    #     "ellipse-OnlyShowTargetID" (avoid the ellipse of the target being too large),
     #     or "box" (the sequence will be displayed),
     #     or "box-OnlyShowTargetID" (the sequence will be displayed, but only show the target's ID).
+    # "TargetNames_UserDefined"：字典，给出每个target代号的对应名字
     # "warning_n_ladderons_to_show": The largest number of ladderons allowed to draw.
     # "rankdir" is the order of the nodes, should be BT (from bottom to top), TB, LR, RL.
     # "color" can be "grey", "red", "#808080", etc.
+    # "figsize" is size of graph, format: "6,6", default could be "8,8"
     # "save_fig_name" is the file name of the figure.
     # "figformat" is the format of the exported figure, which could be "pdf", "png", etc.
     # "cleanGVfile" 是否删除render图片的.gv格式文件
@@ -674,13 +736,16 @@ def draw_laddergraph(lpjson, show_longer_than = 0, style = "ellipse",
         print(f'Warning: too many ladderons (>{n_ladderons_to_show}) to draw!!!')
 
 
-    if style not in ['ellipse', 'box', 'box-OnlyShowTargetID']:
-        print('! Wrong: the parameter \'style\' can only be either \'ellipse\', \'box\', \'box-OnlyShowTargetID\'')
+    if style not in ['ellipse', 'ellipse-OnlyShowTargetID', 'box', 'box-OnlyShowTargetID']:
+        print('! Wrong: the parameter \'style\' can only be either \'ellipse\', \'ellipse-OnlyShowTargetID\', \'box\', \'box-OnlyShowTargetID\'')
         return
 
     onlyshowtargetid = False
     if style == "box-OnlyShowTargetID":
         style = "box"
+        onlyshowtargetid = True
+    if style == "ellipse-OnlyShowTargetID":
+        style = "ellipse"
         onlyshowtargetid = True
     
     ladderons = lpjson['ladderons']    
@@ -691,20 +756,27 @@ def draw_laddergraph(lpjson, show_longer_than = 0, style = "ellipse",
     ladderons_2ID = {val[2]: ID for ID, val in ladderons.items()}
     bbbs_2ID = { val:f'b{i}' for i, val in enumerate(lpjson['basic_building_blocks'])} #按bbb List中的顺序来，赋予其ID b1, b2,...
 
+
+    if len(TargetNames_UserDefined) == 0: # 为targets定义名字
+        for target, ID in targets_2ID.items():
+            TargetNames_UserDefined[ID] = str(ID)
     # initialize the graph
     g = graphviz.Digraph()
-    g.attr(rankdir=rankdir)
+    if figsize is None:
+        g.attr(rankdir=rankdir)
+    else:
+        g.attr(rankdir=rankdir, size=figsize)
     if style == "box": # a detailed version, showing ladderons length
         g.attr('node', shape='box')
         for target, ID in targets_2ID.items(): # draw all target sequences
             if target in ladderons_2ID: # 说明这个target也是梯元
                 if onlyshowtargetid:
-                    g.node(str(ID), label = str(ID) + ' (&)')
+                    g.node(str(ID), label = TargetNames_UserDefined[ID] + ' (&)')
                 else:
                     g.node(str(ID), label = target + ' (&)')
             else:
                 if onlyshowtargetid:
-                    g.node(str(ID), label = str(ID))
+                    g.node(str(ID), label = TargetNames_UserDefined[ID])
                 else:
                     g.node(str(ID), label = target)
         if show_longer_than == 0: # display basic building blocks or not
@@ -717,10 +789,16 @@ def draw_laddergraph(lpjson, show_longer_than = 0, style = "ellipse",
             length = ellipse_len(target)
             if target in ladderons_2ID:
                 IDanother = ladderons_2ID[target]
-                templabel = f'{ID}({IDanother})'
-                g.node(str(ID), label = templabel, **{'width':str(length),'height':str(length/2)})
+                templabel = TargetNames_UserDefined[ID] + f'({IDanother})'
+                if onlyshowtargetid:
+                    g.node(str(ID), label = templabel)
+                else:
+                    g.node(str(ID), label = templabel, **{'width':str(length),'height':str(length/2)})
             else:
-                g.node(str(ID), label = str(ID), **{'width':str(length),'height':str(length/2)})
+                if onlyshowtargetid:
+                    g.node(str(ID), label = TargetNames_UserDefined[ID])
+                else:
+                    g.node(str(ID), label = TargetNames_UserDefined[ID], **{'width':str(length),'height':str(length/2)})
         if show_longer_than == 0: # display basic building blocks or not
             length = ellipse_len( next(iter(bbbs_2ID)) )
             for bbb, IDstr in bbbs_2ID.items():
@@ -843,10 +921,18 @@ def cal_omega_min_Shuffle_list(combined_str, N_omega_min):
         omega_min_list.append( sizeindex - lpindex )
     return omega_min_list
 
+
+# 关于eta的计算：min，按照均匀概率分布。（不再按各target长度切割）
+def cal_omega_min_EvenDist_list(combined_str, nBase, nMin):
+    unicode_codes = [chr(i) for i in range(65, 65 + nBase)]
+    omega_min_list = []
+    for _ in range(nMin):
+        sequence = random.choices(unicode_codes, k=len(combined_str))
+        lpindex, sizeindex, _, _ = find_ladderpath([''.join(sequence)])
+        omega_min_list.append( sizeindex - lpindex )
+    return omega_min_list
+
+
 # 关于eta的计算：min，按照原序列的概率分布
 def cal_omega_min_LocalDist_list():
-    pass
-
-# 关于eta的计算：min，按照均匀概率分布
-def cal_omega_min_EvenDist_list():
     pass
