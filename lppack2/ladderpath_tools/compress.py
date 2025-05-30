@@ -1,15 +1,24 @@
 """
-Version 2.0.1
+Version 2.0.2
 Authors: ecsLab (Yu Liu, Lanxin Ma, et al.)
-Data: 2024.09.16
+Data: 2025.04.04
 
-Based on ladderpath standard JSON format (V1.0.0.20240910_Alpha)
+Based on ladderpath standard JSON format (V1.0.2.20250404_Alpha)
 """
 
 import ladderpath as lp
 
 # 利用梯径进行压缩
 def compress(lpjson, display=False, SEP='@'):
+    try:
+        if lpjson['input_type'] != 'list':
+            print('Warning: Abort. The input_type for targets must be list, otherwise we cannot compress it. Cannot be dict.')
+            return
+    except:
+        print('Warning: ladderpath standard JSON format has been updated to V1.0.2.20250404_Alpha, or above.')
+        print('         What you used is an old version; It will be abandoned in future versions.')
+        print('')
+
     targets, lds = lpjson['targets'], lpjson['ladderons']
 
     ld_incl = [] # 记录所有牵扯到的梯元

@@ -1,9 +1,9 @@
 """
-Version 2.0.8
+Version 2.0.11
 Authors: ecsLab (Yu Liu, Jingwen Zhang, et al.) & Dinger
-Data: 2025.03.18
+Data: 2025.04.24
 
-梯径的标准化格式 输出, V1.0.1.20240928_Alpha
+梯径的标准化格式 输出, V1.0.2.20250404_Alpha
 (& 清空/填满缓存 & 读取JSON文档 & 偏序多重集表示 & 梯图表示)
 """
 
@@ -305,12 +305,21 @@ def find_ladderpath(ss: List[str]) -> Tuple[int, int, int, List[Ladderon]]:
 
 # 输出 JSON 格式
 def get_ladderpath(targets0: List[str], 
-    info='V1.0.1.20240928_Alpha', 
+    info='V1.0.2.20250404_Alpha', 
+    fill_ladderons_STR = False, # 是否将梯元完整显示，默认是False以节省空间
     estimate_eta = False, # 是否需要估算eta
     estimate_eta_para = {}, # 具体计算eta的方法
     save_file_name=None, 
     show_version=True) -> dict: #输出是梯径的JSON标准格式
     
+    if isinstance(targets0, list):
+        input_type = 'list'
+    elif isinstance(targets0, dict):
+        input_type = 'dict'
+    else:
+        print('Wrong: Input type wrong!')
+        return
+
     if estimate_eta: # 计算eta
         if len(estimate_eta_para) == 0:
             print('Wrong: you must set estimate_eta_para. Abort.')
@@ -346,7 +355,8 @@ def get_ladderpath(targets0: List[str],
             "omega_min_Shuffle_list": [],
             "omega_min_LocalDist_list": [],
             "omega_min_EvenDist_list": []
-            }
+            },
+        "input_type": input_type
         }
 
     
@@ -404,27 +414,42 @@ def get_ladderpath(targets0: List[str],
             data["ladderons"][new_id] = [new_comp, len(string), "", new_pos]
 
     if duplications_info: # 处理targets中有重复的情况
-        temp_dup_info = {}
+        if isinstance(next(iter(duplications_info.values())), int): # dict输入形式，并没有需要重编号重复targets的问题
+            input_is_dict = True
+            temp_dup_info = duplications_info
+        else: # list输入形式，需要重编号重复targets的问题
+            input_is_dict = False
+            temp_dup_info = {}
+
         for s, val in duplications_info.items():
-            thisTargetID = val[0]  # val[0]是target的ID
-            extra_duplications = len(val)-2
+            if input_is_dict: # dict输入形式，并没有需要重编号重复targets的问题
+                thisTargetID = s
+                extra_duplications = val - 1
+            else: 
+                thisTargetID = val[0]  # val[0]是target的ID
+                extra_duplications = len(val)-2
+                temp_dup_info[val[0]] = val[1:]         
+
             thisInfoList = data["targets"][thisTargetID] #该target的infoList
 
             thisInfoList[3] += extra_duplications
             data["ladderpath-index"] += extra_duplications
-            data["size-index"] += (extra_duplications * len(s))
+            data["size-index"] += (extra_duplications * thisInfoList[1])
 
             if _for_duplications_info_ladderonExist(thisInfoList[0]): #表明 该s还不是梯元，则要将其放入梯元(否则 该s已经既是target也是梯元）
                 newLadderonID = len(data['ladderons'])
                 data['ladderons'][newLadderonID] = thisInfoList[:3] + [{ thisTargetID:[0] }]
-                thisInfoList[0] = [newLadderonID]
 
                 for key, infoList in data['ladderons'].items(): #将连接至targets的ID改成ladderon的ID
                     if key != newLadderonID and thisTargetID in infoList[3]:
                         infoList[3][newLadderonID] = infoList[3].pop(thisTargetID)
-            temp_dup_info[val[0]] = val[1:]
+
         data["order-index"] = data["size-index"] - data["ladderpath-index"]
         data['duplications_info'] = temp_dup_info
+
+
+    if fill_ladderons_STR:
+        fill_lpjson_STR(data)
 
     # 将处理好的格式导入JSON文件
     if save_file_name:
@@ -451,22 +476,34 @@ def _for_duplications_info_ladderonExist(thisInfoList_0): # thisInfoList_0 is th
 
 # 将targets序列去重
 def uniquenize(strs):
-    counter = Counter(strs)
-    if len(strs) != len(counter):
-        strs_unique = []  # 最后要输出的没有重复序列的targets
-        duplications_info = {}  # 最后要输出的重复序列的信息 Dict[str:List(int)]。字典的value(List)第一entry是这个str的ID，后面的entries是其str在原始序列中出现的所有位置
-        for i, s in enumerate(strs):
-            if counter[s] == 1:
-                strs_unique.append(s)
-            else:
-                if s in duplications_info:
-                    duplications_info[s].append(i)
-                else:
-                    duplications_info[s] = [-len(strs_unique)-1, i]
+    if isinstance(strs, dict): # 字典格式的输入
+        duplications_info = {}
+        strlist = []
+        i = 0
+        for str0, multi in strs.items():
+            i -= 1
+            strlist.append(str0)
+            if multi > 1:
+                duplications_info[i] = multi #这里就是该target的计数，而不是一个list表明该target重复出现的位置
+        return strlist, duplications_info # duplications_info的格式和下面不一样；这里直接是输出格式
+
+    else:  # type(strs) == list
+        counter = Counter(strs)
+        if len(strs) != len(counter):
+            strs_unique = []  # 最后要输出的没有重复序列的targets
+            duplications_info = {}  # 最后要输出的重复序列的信息 Dict[str:List(int)]。字典的value(List)第一entry是这个str的ID，后面的entries是其str在原始序列中出现的所有位置
+            for i, s in enumerate(strs):
+                if counter[s] == 1:
                     strs_unique.append(s)
-        return strs_unique, duplications_info
-    else:
-        return strs, {}
+                else:
+                    if s in duplications_info:
+                        duplications_info[s].append(i)
+                    else:
+                        duplications_info[s] = [-len(strs_unique)-1, i]
+                        strs_unique.append(s)
+            return strs_unique, duplications_info # duplications_info的格式和上面不一样
+        else:
+            return strs, {}
 
 
 
@@ -561,9 +598,14 @@ def POM_from_JSON(lpjson, display_str=False):
         pom_final_pool[i] = dict(temp)
 
     for ID, pos in lpjson['duplications_info'].items(): # 处理targets中有重复的情况
+        if isinstance(pos, int):
+            thismulti = pos - 1  # 字典input形式。duplications_info记录的就是重复次数
+        else:
+            thismulti = len(pos) - 1  # list input形式。duplications_info记录的是重复出现的位置
+
         for val_strs in pom_final_pool.values():
             if lpjson['targets'][ID][2] in val_strs: #lpjson['targets'][ID][2]是ladderon STR本身
-                val_strs[ lpjson['targets'][ID][2] ] += (len(pos) - 1) # 更改的是pom_final_pool
+                val_strs[ lpjson['targets'][ID][2] ] += thismulti # 更改的是pom_final_pool
 
     pom_str = ''
     if display_str:
@@ -618,6 +660,11 @@ def get_eta(lpjson, estimate_eta_para={}, \
     targets_known=None, use_as_update=False): 
     # targets_known: 用在get_ladderpath函数中，直接传入targets0而不用再通过lpjson计算,这个参数不允许外部设置
     # use_as_update=False 这个参数不允许外部设为 True
+
+    if lpjson['duplications_info']: # 如果有targets中有重复，则目前版本无法计算eta【后续版本更新该功能】
+        print('Warning: Abort. duplications_info is not empty, eta cannot be calculated. Upgrade wanted.')
+        return
+
 
     if not use_as_update: #如果不是update，那么就直接读取已经有的eta
         omega_max = lpjson['eta_info']['omega_max_'+estimate_eta_para['max_method']]
@@ -707,7 +754,7 @@ def ellipse_len(seq): # 画梯图的associated函数
     return length
 
 def draw_laddergraph(lpjson, show_longer_than = 0, style = "ellipse", 
-    TargetNames_UserDefined = {},
+    TargetNames_UserDefined = None,
     warning_n_ladderons_to_show = 500,
     rankdir = "BT", color = "grey", figsize = None,
     save_fig_name = None, figformat = "pdf", cleanGVfile=True):
@@ -727,7 +774,7 @@ def draw_laddergraph(lpjson, show_longer_than = 0, style = "ellipse",
     # "save_fig_name" is the file name of the figure.
     # "figformat" is the format of the exported figure, which could be "pdf", "png", etc.
     # "cleanGVfile" 是否删除render图片的.gv格式文件
-    
+
     n_ladderons_to_show = 0
     for ldID, infoList in lpjson['ladderons'].items():
         if len(infoList[2]) > show_longer_than:
@@ -755,9 +802,9 @@ def draw_laddergraph(lpjson, show_longer_than = 0, style = "ellipse",
     targets_2ID = {val[2]: ID for ID, val in targets.items()} # targets_strs按输入来，不一定是-1，-2，-3...
     ladderons_2ID = {val[2]: ID for ID, val in ladderons.items()}
     bbbs_2ID = { val:f'b{i}' for i, val in enumerate(lpjson['basic_building_blocks'])} #按bbb List中的顺序来，赋予其ID b1, b2,...
-
-
-    if len(TargetNames_UserDefined) == 0: # 为targets定义名字
+    
+    if TargetNames_UserDefined is None: # 为targets定义名字
+        TargetNames_UserDefined = {}
         for target, ID in targets_2ID.items():
             TargetNames_UserDefined[ID] = str(ID)
     # initialize the graph
@@ -822,7 +869,11 @@ def draw_laddergraph(lpjson, show_longer_than = 0, style = "ellipse",
                 g.edge(id_linkedto[0], id_linkedto[1], color = color)
 
     for ID, pos in lpjson['duplications_info'].items(): # 处理targets中有重复的情况
-        for _ in range(len(pos)-1):
+        if isinstance(pos, int):
+            thismulti = pos - 1  # 字典input形式。duplications_info记录的就是重复次数
+        else:
+            thismulti = len(pos) - 1  # list input形式。duplications_info记录的是重复出现的位置
+        for _ in range(thismulti):
             g.edge(str( lpjson['targets'][ID][0][0] ), str(ID), color = color)
 
     if show_longer_than == 0: # display the links from basic building blocks
