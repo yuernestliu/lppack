@@ -1,14 +1,15 @@
-Codes (v2.0) to calculate ladderpath of sequences.
-**Associated with the papers**: 
-*Text Distance from Nested and Hierarchical Repetitions: A Compression-Based Perspective*, 2025.
+**Codes (v2.0) to calculate ladderpath of sequences.**
 
-*Correlating measures of hierarchical structures in artificial neural networks with their performance*, 2024.
+Associated with the papers:
+  - *Text Distance from Nested and Hierarchical Repetitions: A Compression-Based Perspective*, 2025.
 
-*Discovery of Highly Bioactive Peptides through Hierarchical Structural Information and Molecular Dynamics Simulations*, 2024.
+ - *Correlating measures of hierarchical structures in artificial neural networks with their performance*, 2024.
+ 
+ - *Discovery of Highly Bioactive Peptides through Hierarchical Structural Information and Molecular Dynamics Simulations*, 2024.
 
-*Evolutionary tinkering enriches the hierarchical and nested structures in amino acid sequences*, 2024.
+ - *Evolutionary tinkering enriches the hierarchical and nested structures in amino acid sequences*, 2024.
 
-*Ladderpath Approach: How Tinkering and Reuse Increase Complexity and Information*, 2022.
+ - *Ladderpath Approach: How Tinkering and Reuse Increase Complexity and Information*, 2022.
 
 
 
