@@ -6,7 +6,7 @@
 "info": "V1.0.0.20240910_Alpha"
 
 "ladderpath-index": 23,
-"order-index": 10, // order-index Ω
+"order-index": 10, # order-index Ω
 "size-index": 33, 
 "eta": 0.67, // order-rate (η)
 "omega_max": 15, // Ω of the most ordered sequenece with the same size-index, used to compute η
