@@ -13,7 +13,7 @@
 "omega_min_list": [3,5,5,9,3], # List of Ω's from randomized sequences; all outcomes are recorded here. The minimum is used to compute η.
       
 "ladderons": {  # Dictionary in the format ID (int): List[COMP (List), LEN (int), STR (str), POS (Dict)]
-    0: [ //ID  0, 1, 2, ...
+    0: [ # ID  0, 1, 2, ...
      ["ACE", 1, "C", 5, 6, 6, 3, "EE"], # COMP: Basic building blocks + ladderon IDs arranged by the target sequence; uniquely reconstructible
      23, # LEN: Length of the ladderon
      "", # STR: Placeholder string, used to store the reconstructed ladderon
@@ -68,18 +68,18 @@ Notes:
 
 All else remains unchanged, except for modifications to the handling of eta. Specifically: (1) The separate entries `omega_max` and `omega_min_list` have been removed. (2) A new consolidated information object called eta_info has been added.
 
-```JSON
+```yaml
 {
 "eta": 0.67, # Order-rate (η), representing an approximate value. Detailed information is stored in `eta_info`
 
 
 "eta_info": {
-    "omega_max_AllIdentical": 20, // Equivalent to generating a sequence of the same length as the original, consisting entirely of 'A's (no longer segmented by target lengths).
-    "omega_max_Sorted": 15, // Calculated omega from the fully concatenated and sorted version of the original sequence (also not segmented by target lengths). This is often the maximum omega among all permutations.
+    "omega_max_AllIdentical": 20, # Equivalent to generating a sequence of the same length as the original, consisting entirely of 'A's (no longer segmented by target lengths).
+    "omega_max_Sorted": 15, # Calculated omega from the fully concatenated and sorted version of the original sequence (also not segmented by target lengths). This is often the maximum omega among all permutations.
   
-    "omega_min_Shuffle_list": [3,5,5,9,3], // Omega values obtained by random shuffling of the target sequence. The minimum of these is used in computing eta.
-    "omega_min_LocalDist_list": [3,5,8] // Omega values from randomly generated sequences that follow the original letter distribution. These sequences have the same length as the target.
-    "omega_min_EvenDist_list": [5,9,2,6] // Omega values from sequences of the same length as the original, with all characters evenly distributed.
+    "omega_min_Shuffle_list": [3,5,5,9,3], # Omega values obtained by random shuffling of the target sequence. The minimum of these is used in computing eta.
+    "omega_min_LocalDist_list": [3,5,8] # Omega values from randomly generated sequences that follow the original letter distribution. These sequences have the same length as the target.
+    "omega_min_EvenDist_list": [5,9,2,6] # Omega values from sequences of the same length as the original, with all characters evenly distributed.
     }
 }
 ```
@@ -326,24 +326,24 @@ compressed_list = lp_c.compress(lpjson, display=False, SEP='@')
 
 * The `compressed_list` contains the compressed representation of the ladderpath. Explanation of the structure:
 
-```JSON
-# [8, // Number of target sequences
-    '@', 'A', 1, 6, 4, 2, 2,  // Target 1
-    '@', 3,  // Target 2
+```yaml
+# [8, # Number of target sequences
+    '@', 'A', 1, 6, 4, 2, 2,  # Target 1
+    '@', 3,  # Target 2
     '@', 3, 
     '@', 0, 
     '@', 1, 4, 'A', 2, 
     '@', 3, 
     '@', 0, 
-    '@', 3, 3,  // Target 8
+    '@', 3, 3,  # Target 8
   
-    '@', 6, 'A',  // Ladderon 0 (note: ordering may differ from lpjson)
-    '@', 'BC',   // Ladderon 1
-    '@', 'EF',   // Ladderon 2
-    '@', 'AA',   // Ladderon 3
-    '@', 'DCD',  // Ladderon 4
-    '@', 'D', 1, // Ladderon 5
-    '@', 5, 5]   // Ladderon 6
+    '@', 6, 'A',  # Ladderon 0 (note: ordering may differ from lpjson)
+    '@', 'BC',   # Ladderon 1
+    '@', 'EF',   # Ladderon 2
+    '@', 'AA',   # Ladderon 3
+    '@', 'DCD',  # Ladderon 4
+    '@', 'D', 1, # Ladderon 5
+    '@', 5, 5]   # Ladderon 6
 ```
 
 **Decompress the `compressed_list` back into the original targets**
