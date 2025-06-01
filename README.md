@@ -1,7 +1,7 @@
 # 1. Ladderpath JSON Standard Format
 ## V1.0.0.20240910\_Alpha Version
 
-```JSON
+```yaml
 {
 "info": "V1.0.0.20240910_Alpha"
 
@@ -88,9 +88,9 @@ All else remains unchanged, except for modifications to the handling of eta. Spe
 
 An additional input format specification for targets was introduced:
 
-```JSON
+```yaml
 {
-"input_type": "list" // or "dict"
+"input_type": "list" # or "dict"
 }
 ```
 
