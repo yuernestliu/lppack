@@ -8,16 +8,16 @@
 "ladderpath-index": 23,
 "order-index": 10, # order-index Ω
 "size-index": 33, 
-"eta": 0.67, // order-rate (η)
-"omega_max": 15, // Ω of the most ordered sequenece with the same size-index, used to compute η
-"omega_min_list": [3,5,5,9,3], // List of Ω's from randomized sequences; all outcomes are recorded here. The minimum is used to compute η.
+"eta": 0.67, # order-rate (η)
+"omega_max": 15, # Ω of the most ordered sequenece with the same size-index, used to compute η
+"omega_min_list": [3,5,5,9,3], # List of Ω's from randomized sequences; all outcomes are recorded here. The minimum is used to compute η.
       
-"ladderons": {  // Dictionary in the format ID (int): List[COMP (List), LEN (int), STR (str), POS (Dict)]
+"ladderons": {  # Dictionary in the format ID (int): List[COMP (List), LEN (int), STR (str), POS (Dict)]
     0: [ //ID  0, 1, 2, ...
-     ["ACE", 1, "C", 5, 6, 6, 3, "EE"], // COMP: Basic building blocks + ladderon IDs arranged by the target sequence; uniquely reconstructible
-     23, // LEN: Length of the ladderon
-     "", // STR: Placeholder string, used to store the reconstructed ladderon
-     {-1: [1, 20, 35], 1: [0, 6], 4: [2]} // POS: {int: [int]}, indicates which higher-level ladderons (by ID) use this ladderon, and the positions (indexes) at which it appears in their COMP lists.
+     ["ACE", 1, "C", 5, 6, 6, 3, "EE"], # COMP: Basic building blocks + ladderon IDs arranged by the target sequence; uniquely reconstructible
+     23, # LEN: Length of the ladderon
+     "", # STR: Placeholder string, used to store the reconstructed ladderon
+     {-1: [1, 20, 35], 1: [0, 6], 4: [2]} # POS: {int: [int]}, indicates which higher-level ladderons (by ID) use this ladderon, and the positions (indexes) at which it appears in their COMP lists.
      ],
    
     1: [
@@ -34,12 +34,12 @@
 "basic_building_blocks": List(str)
 
   
-"targets": {  // Dictionary in format ID (int): [COMP (List), LEN (int), STR (str), REP (int)]
-    -1: [ // Target identifiers: -1, -2, -3, ...
+"targets": {  # Dictionary in format ID (int): [COMP (List), LEN (int), STR (str), REP (int)]
+    -1: [ # Target identifiers: -1, -2, -3, ...
       ["ACE", 1, "C", 5, 6, 6, 3, "EE"],
       98,
       "",
-      1  // REP: Number of times this target appears in the original targets
+      1  # REP: Number of times this target appears in the original targets
       ],
    
     -2: [ 
@@ -52,7 +52,7 @@
     ...
     }
   
-"duplications_info": Dict(int:[int]) // Stores information about duplicated sequences in targets. Key: target ID; Value: list of its positions in the original targets (0-based indexing)
+"duplications_info": Dict(int:[int]) # Stores information about duplicated sequences in targets. Key: target ID; Value: list of its positions in the original targets (0-based indexing)
 }
 ```
 
@@ -70,7 +70,7 @@ All else remains unchanged, except for modifications to the handling of eta. Spe
 
 ```JSON
 {
-"eta": 0.67, // Order-rate (η), representing an approximate value. Detailed information is stored in `eta_info`
+"eta": 0.67, # Order-rate (η), representing an approximate value. Detailed information is stored in `eta_info`
 
 
 "eta_info": {
