@@ -5,11 +5,11 @@ Associated with the papers:
 
   - *Ladderpath: An Efficient Algorithm for Revealing Nested Dependencies in Sequence Sets*, 2025.
 
- - *Correlating measures of hierarchical structures in artificial neural networks with their performance*, 2024.
+ - *Correlating Measures of Hierarchical Structures in Artificial Neural Networks with Their Performance*, 2024.
  
  - *Discovery of Highly Bioactive Peptides through Hierarchical Structural Information and Molecular Dynamics Simulations*, 2024.
 
- - *Evolutionary tinkering enriches the hierarchical and nested structures in amino acid sequences*, 2024.
+ - *Evolutionary Tinkering Enriches the Hierarchical and Nested Structures in Amino Acid Sequences*, 2024.
 
  - *Ladderpath Approach: How Tinkering and Reuse Increase Complexity and Information*, 2022.
 
