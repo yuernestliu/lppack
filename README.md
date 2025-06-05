@@ -369,3 +369,20 @@ This correctly restores the original list of sequences, including any duplicates
 ```Python
 decompressed_str = lp_c.decompressed(compressed_list, display=False)
 ```
+
+### Computing ladderpath-index from existing laddergraph
+```Python
+import ladderpath_tools.lambda_from_laddergraph as lp0
+```
+```yaml
+leaves1or2 = [-1]
+# leaves1or2 = ['DBCDBCA']
+lambda1 = lp1.get(leaves1or2, lpjson)
+
+leaves1or2 = [-1, -3]
+# leaves1or2 = ['ABCDBCDBCDCDEFEF', 'DBCDBCA']
+lambda2 = lp1.get(leaves1or2, lpjson)
+```
+- `leaves1or2` must refer to either one or two targets: These can be the sequences themselves to be computed or their IDs. But `lpjson` must be a ladderpath JSON that includes these one or two targets.
+- If `leaves1or2` contains a single target, then `lambda1` is the ladderpath-index of this target, computed from the Laddergraph (including the one-step taking out). In principle, `lambda1` should be equal to the ladderpath-index computed directly.
+- If `leaves1or2` contains two targets, then `lambda2` is the ladderpath-index of these two targets together, computed from the Laddergraph (including the two-step taking out).
