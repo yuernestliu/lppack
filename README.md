@@ -72,7 +72,19 @@ Download the installer from the official Graphviz website and add it to PATH.
 
 ### Option A — Install from GitHub (recommended for latest version)
 
-To use this project, download the repository as a ZIP file, extract it, and add the extracted folder to your system PATH.
+```bash
+git clone https://github.com/yuernestliu/lppack.git
+cd lppack
+pip install -e .
+```
+
+The `-e` (editable) mode is useful if you plan to modify the code locally and immediately use the updated version.
+
+### Option B — Install with pip directly from the repository
+
+```bash
+pip install git+https://github.com/yuernestliu/lppack.git
+```
 
 ---
 
