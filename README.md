@@ -20,7 +20,6 @@ To ensure experiments and results are reproducible across systems, please note t
 * **Operating systems tested**: Windows 10/11, Ubuntu 20.04/22.04, macOS 12+.
 * **Python versions tested**: Python **3.8–3.12** (recommended ≥3.9).
 * **Core dependency philosophy**: the main Ladderpath algorithm uses **only Python standard library**; external packages are optional and only needed for visualization (see below).
-* **Determinism**: if you use randomized eta estimation, set Python’s random seed in your scripts (e.g., `random.seed(0)`) to reproduce the same `omega_min_*_list`.
 
 ---
 
