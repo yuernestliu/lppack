@@ -4,7 +4,6 @@
 
 Associated with the papers:
 
-* *Text Distance from Nested and Hierarchical Repetitions: A Compression-Based Perspective*, 2025.
 * *Ladderpath: An Efficient Algorithm for Revealing Nested Hierarchy in Sequences*, 2025.
 * *Correlating Measures of Hierarchical Structures in Artificial Neural Networks with Their Performance*, 2024.
 * *Discovery of Highly Bioactive Peptides through Hierarchical Structural Information and Molecular Dynamics Simulations*, 2024.
