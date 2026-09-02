@@ -1,11 +1,13 @@
 """
-Version 2.0.11
-Authors: ecsLab (Yu Liu, Jingwen Zhang, et al.) & Dinger
-Data: 2025.04.24
+Version 2.0.21
+Authors: ecsLab
+Data: 2026.06.12
 
-梯径的标准化格式 输出, V1.0.2.20250404_Alpha
-(& 清空/填满缓存 & 读取JSON文档 & 偏序多重集表示 & 梯图表示)
+# CUDA/macm 后端对非 ASCII 输入自动使用 Unicode 字符坐标
 """
+
+VERSION_ladderpathpy = 'v2.0.21'
+VERSION_lpjson = 'v1.1' # 保持最新版本
 
 
 import json
@@ -14,7 +16,6 @@ from time import time
 import random
 from collections import defaultdict, Counter
 from dataclasses import dataclass
-import graphviz
 from typing import List, Dict, Tuple
 
 
@@ -304,115 +305,133 @@ def find_ladderpath(ss: List[str]) -> Tuple[int, int, int, List[Ladderon]]:
 
 
 # 输出 JSON 格式
-def get_ladderpath(targets0: List[str], 
-    info='V1.0.2.20250404_Alpha', 
+def get_ladderpath(targets0, # {str:int} 或者 List[str], 
     fill_ladderons_STR = False, # 是否将梯元完整显示，默认是False以节省空间
-    estimate_eta = False, # 是否需要估算eta
-    estimate_eta_para = {}, # 具体计算eta的方法
     save_file_name=None, 
-    show_version=True) -> dict: #输出是梯径的JSON标准格式
-    
-    if isinstance(targets0, list):
-        input_type = 'list'
-    elif isinstance(targets0, dict):
-        input_type = 'dict'
-    else:
-        print('Wrong: Input type wrong!')
-        return
-
-    if estimate_eta: # 计算eta
-        if len(estimate_eta_para) == 0:
-            print('Wrong: you must set estimate_eta_para. Abort.')
-            print("       e.g., estimate_eta_para={'n': 10, 'max_method': 'AllIdentical', 'min_method': 'EvenDist', 'min_method_nBase': 20)")
-            return
-
-    if not valid_input(targets0): # 判断targets0是否在合法的
-        print('Wrong: Input is not valid!!!')
-        return
-
-    if show_version:
-        print('This version of the ladderpath JSON format is:', info)
-
-    ss, duplications_info = uniquenize(targets0) # 去重
-
-    lp, total_str_len, duration, components = find_ladderpath(ss) #确保ss中没有重复
-    length = len(ss)       # 字符串个数
-    # 标准格式初始化
-    data = {
-        "info": info, 
-        "ladderpath-index": lp, 
-        "order-index": total_str_len - lp, 
-        "size-index": total_str_len, 
-        "eta" : None,
-
-        "ladderons": {}, 
-        "basic_building_blocks": [], 
-        "targets": {},
-        "duplications_info": {},
-        "eta_info": {
-            "omega_max_AllIdentical": None,
-            "omega_max_Sorted": None,
-            "omega_min_Shuffle_list": [],
-            "omega_min_LocalDist_list": [],
-            "omega_min_EvenDist_list": []
-            },
-        "input_type": input_type
-        }
+    show_version=True,
+    mode='cpu') -> dict: #输出是梯径的JSON标准格式
 
     
-    # 筛选出所有的基础单元
-    num_of_basic_blocks = 0
-    for item in components:
-        if len(item.STR) == 1:
-            data["basic_building_blocks"].append(item.STR)
-            num_of_basic_blocks += 1
+    if not isinstance(targets0, (list, dict)):
+        raise TypeError('Input ERROR: Input must be a list or dict!')
+    input_type = 'list' if isinstance(targets0, list) else 'dict'
+    if not isinstance(mode, str):
+        raise TypeError("Parameter ERROR: mode must be one of 'cpu', 'gpu-cuda', or 'macm'.")
+    mode = mode.lower()
+    if mode not in ('cpu', 'gpu-cuda', 'macm'):
+        raise ValueError("Parameter ERROR: mode must be one of 'cpu', 'gpu-cuda', or 'macm'.")
 
-    # 处理所有的target和梯元
-    for i in range(len(components) - num_of_basic_blocks):
-        ladderon_info = components[i]
-        id = ladderon_info.ID
-        # 将原本的ID转换为标准ID
-        if id < length:
-            new_id = -id - 1
-        else:
-            new_id = id - length
-        string = ladderon_info.STR
-        pos = ladderon_info.POS
-        comp = ladderon_info.COMP
-        new_comp = []
+    # 检查input: 1. 没deplicated可用list of strings，若有重复，必须是dict
+    if input_type == 'list':
+        if len(set(targets0)) != len(targets0):
+            raise ValueError('Input ERROR: There are duplications in the list. Use dict instead.')
+        ss = targets0
+        duplications_info = {}
+    else: # input_type == 'dict'
+        ss = list(targets0) # list(dict_obj) 默认就是取 key，且 Python 3.7+ 保序
+        duplications_info = {}
+        for idx, (_, multi) in enumerate(targets0.items(), start=1):
+            if multi > 1:
+                duplications_info[-idx] = multi
+
+    # 检查input: 2. targets中不允许有单字符出现
+    for s0 in ss:
+        if len(s0) < 2:
+            raise ValueError('Input ERROR: Single letters cannot be in the targets.')
+
+    use_unicode_positions = any(not s.isascii() for s in ss)
+
+    # ========= Accelerated versions: 开始计算梯径（只处理ss） =========
+    if mode == 'gpu-cuda':
+        from . import ladderpath_cuda as lp_cuda
+
+        data = lp_cuda.get_ladderpath(ss, ch=use_unicode_positions, show_version=show_version)
+        data['input_type'] = input_type
+
+    elif mode == 'macm':
+        from . import ladderpath_macm as lp_macm
+
+        data = lp_macm.get_ladderpath(ss, ch=use_unicode_positions, show_version=show_version)
+        data['input_type'] = input_type
+
+    else: # ========= CPU version: 开始计算梯径（只处理ss）=========
+        if show_version:
+            print('The version of this ladderpath.py is:', VERSION_ladderpathpy)
+            print('The version of this ladderpath JSON format is:', VERSION_lpjson)
+
+        lp, total_str_len, duration, components = find_ladderpath(ss) #确保ss中没有重复；计算的时候ss仍然是list of strings
+        length = len(ss)       # 字符串个数
+        # 标准格式初始化
+        data = {
+            "info": VERSION_lpjson, 
+            "ladderpath-index": lp, 
+            "order-index": total_str_len - lp, 
+            "size-index": total_str_len, 
+
+            "basic_building_blocks": [], 
+            "ladderons": {}, 
+            "targets": {},
+            "duplications_info": {},
+
+            "eta_info": {},
+            "input_type": input_type
+            }
+
         
-        for j in comp:
-            if len(components[j].STR) == 1:
-                # 将组成列表中的基础元件由ID替换成对应的字符
-                basic_block = components[j].STR
-                if len(new_comp) >= 1 and type(new_comp[-1]) == str:
-                    # 相邻字符连接成串
-                    new_comp[-1] += basic_block
-                else:
-                    new_comp.append(basic_block)
+        # 筛选出所有的基础单元
+        num_of_basic_blocks = 0
+        for item in components:
+            if len(item.STR) == 1:
+                data["basic_building_blocks"].append(item.STR)
+                num_of_basic_blocks += 1
+
+        # 处理所有的target和梯元
+        for i in range(len(components) - num_of_basic_blocks):
+            ladderon_info = components[i]
+            id = ladderon_info.ID
+            # 将原本的ID转换为标准ID
+            if id < length:
+                new_id = -id - 1
             else:
-                # 将原本的ID转换为标准ID，同样分梯元和target处理
-                if j < length:
-                    new_comp.append(-j - 1)
+                new_id = id - length
+            string = ladderon_info.STR
+            pos = ladderon_info.POS
+            comp = ladderon_info.COMP
+            new_comp = []
+            
+            for j in comp:
+                if len(components[j].STR) == 1:
+                    # 将组成列表中的基础元件由ID替换成对应的字符
+                    basic_block = components[j].STR
+                    if len(new_comp) >= 1 and type(new_comp[-1]) == str:
+                        # 相邻字符连接成串
+                        new_comp[-1] += basic_block
+                    else:
+                        new_comp.append(basic_block)
                 else:
-                    new_comp.append(j - length)
-        
-        if not pos:
-            # 判断是target的条件
-            data["targets"][new_id] = [new_comp, len(string), "", 1] #暂时REP设为1
+                    # 将原本的ID转换为标准ID，同样分梯元和target处理
+                    if j < length:
+                        new_comp.append(-j - 1)
+                    else:
+                        new_comp.append(j - length)
+            
+            if not pos:
+                # 判断是target的条件
+                data["targets"][new_id] = [new_comp, len(string), "", 1] #暂时REP设为1
 
-        else:
-            # 如果是梯元，则继续处理pos
-            new_pos = {}
-            for index, situ in pos.items():
-                # 对pos中的ID进行转换
-                if index < length:
-                    index = -int(index) - 1
-                else:
-                    index = int(index) - length
-                new_pos[index] = situ
-            data["ladderons"][new_id] = [new_comp, len(string), "", new_pos]
+            else:
+                # 如果是梯元，则继续处理pos
+                new_pos = {}
+                for index, situ in pos.items():
+                    # 对pos中的ID进行转换
+                    if index < length:
+                        index = -int(index) - 1
+                    else:
+                        index = int(index) - length
+                    new_pos[index] = situ
+                data["ladderons"][new_id] = [new_comp, len(string), "", new_pos]
 
+    # === 从这里，不管是CPU还是GPU版本，都是一样的，把duplications_info整合进算好的 中间态lpjson
     if duplications_info: # 处理targets中有重复的情况
         if isinstance(next(iter(duplications_info.values())), int): # dict输入形式，并没有需要重编号重复targets的问题
             input_is_dict = True
@@ -428,7 +447,7 @@ def get_ladderpath(targets0: List[str],
             else: 
                 thisTargetID = val[0]  # val[0]是target的ID
                 extra_duplications = len(val)-2
-                temp_dup_info[val[0]] = val[1:]         
+                temp_dup_info[val[0]] = val[1:]
 
             thisInfoList = data["targets"][thisTargetID] #该target的infoList
 
@@ -444,6 +463,8 @@ def get_ladderpath(targets0: List[str],
                     if key != newLadderonID and thisTargetID in infoList[3]:
                         infoList[3][newLadderonID] = infoList[3].pop(thisTargetID)
 
+                data["targets"][thisTargetID][0] = [newLadderonID] #其组成成分都必须指向 作为梯元的那个target
+
         data["order-index"] = data["size-index"] - data["ladderpath-index"]
         data['duplications_info'] = temp_dup_info
 
@@ -456,10 +477,8 @@ def get_ladderpath(targets0: List[str],
         save_file_name += '.json' if not save_file_name.endswith('.json') else ''
         save_ladderpath_json(data, save_file_name)
 
-    if estimate_eta: # 计算eta
-        get_eta(data, estimate_eta_para, targets_known=ss, use_as_update=False)
-
     return data
+
 
 def _for_duplications_info_ladderonExist(thisInfoList_0): # thisInfoList_0 is thisInfoList[0]
     #表明 该s还不是梯元，则要将其放入梯元(否则 该s已经既是target也是梯元）
@@ -471,40 +490,6 @@ def _for_duplications_info_ladderonExist(thisInfoList_0): # thisInfoList_0 is th
         if len(thisInfoList_0[0]) > 1:
             return True
     return False
-
-
-
-# 将targets序列去重
-def uniquenize(strs):
-    if isinstance(strs, dict): # 字典格式的输入
-        duplications_info = {}
-        strlist = []
-        i = 0
-        for str0, multi in strs.items():
-            i -= 1
-            strlist.append(str0)
-            if multi > 1:
-                duplications_info[i] = multi #这里就是该target的计数，而不是一个list表明该target重复出现的位置
-        return strlist, duplications_info # duplications_info的格式和下面不一样；这里直接是输出格式
-
-    else:  # type(strs) == list
-        counter = Counter(strs)
-        if len(strs) != len(counter):
-            strs_unique = []  # 最后要输出的没有重复序列的targets
-            duplications_info = {}  # 最后要输出的重复序列的信息 Dict[str:List(int)]。字典的value(List)第一entry是这个str的ID，后面的entries是其str在原始序列中出现的所有位置
-            for i, s in enumerate(strs):
-                if counter[s] == 1:
-                    strs_unique.append(s)
-                else:
-                    if s in duplications_info:
-                        duplications_info[s].append(i)
-                    else:
-                        duplications_info[s] = [-len(strs_unique)-1, i]
-                        strs_unique.append(s)
-            return strs_unique, duplications_info # duplications_info的格式和上面不一样
-        else:
-            return strs, {}
-
 
 
 # =============== 对梯径JSON格式的 标准后续处理 ===============
@@ -654,256 +639,44 @@ def disp3index(lpjson):
     return index3
 
 
-
-# 如果eta存在，则取出；如果不存在，则计算
-def get_eta(lpjson, estimate_eta_para={}, \
-    targets_known=None, use_as_update=False): 
-    # targets_known: 用在get_ladderpath函数中，直接传入targets0而不用再通过lpjson计算,这个参数不允许外部设置
-    # use_as_update=False 这个参数不允许外部设为 True
-
-    if lpjson['duplications_info']: # 如果有targets中有重复，则目前版本无法计算eta【后续版本更新该功能】
-        print('Warning: Abort. duplications_info is not empty, eta cannot be calculated. Upgrade wanted.')
-        return
-
-
-    if not use_as_update: #如果不是update，那么就直接读取已经有的eta
-        omega_max = lpjson['eta_info']['omega_max_'+estimate_eta_para['max_method']]
-        omega_min_list = lpjson['eta_info']['omega_min_'+estimate_eta_para['min_method']+'_list']
-        if omega_max and omega_min_list:
-            omega_min = min(omega_min_list)
-            eta = (lpjson['order-index'] - omega_min) / (omega_max - omega_min)
-            lpjson['eta'] = eta
-            return eta
-
-    if targets_known:
-        combined_str = ''.join(targets_known)
-    else:
-        fill_lpjson_STR(lpjson)
-        targets_list = reconstruct_targets_list(lpjson)
-        targets_len, combined_str_list = [], []
-        for ID in targets_list:
-            temp = lpjson['targets'][ID]
-            targets_len.append( temp[1] ) # 长度的list
-            combined_str_list.append( temp[2] )
-        combined_str = ''.join(combined_str_list)
-
-    try:
-        if estimate_eta_para['max_method'] == 'AllIdentical':# 这里是计算关于omega_max
-            if use_as_update:
-                omega_max = lpjson['eta_info']['omega_max_AllIdentical']
-            else:
-                omega_max = cal_omega_max_AllIdentical(combined_str)
-                lpjson['eta_info']['omega_max_AllIdentical'] = omega_max
-        elif estimate_eta_para['max_method'] == 'Sorted':
-            if use_as_update:
-                omega_max = lpjson['eta_info']['omega_max_Sorted']
-            else:
-                omega_max = cal_omega_max_Sorted(combined_str)
-                lpjson['eta_info']['omega_max_Sorted'] = omega_max
-        else:
-            print('Warning: settings in get_eta() are wrong, abort function.')
-            return
-
-        # 这里是计算关于omega_min。计算n次，取最小的
-        nMin = estimate_eta_para['n']
-        if estimate_eta_para['min_method'] == 'Shuffle':
-            temp_list = cal_omega_min_Shuffle_list(combined_str, nMin)
-            if use_as_update:
-                lpjson['eta_info']['omega_min_Shuffle_list'].extend(temp_list)
-            else:
-                lpjson['eta_info']['omega_min_Shuffle_list'] = temp_list
-            omega_min = min(lpjson['eta_info']['omega_min_Shuffle_list'])
-        elif estimate_eta_para['min_method'] == 'EvenDist':
-            nBase = estimate_eta_para['min_method_nBase']
-            temp_list = cal_omega_min_EvenDist_list(combined_str, nBase, nMin)
-            if use_as_update:
-                lpjson['eta_info']['omega_min_EvenDist_list'].extend(temp_list)
-            else:
-                lpjson['eta_info']['omega_min_EvenDist_list'] = temp_list
-            omega_min = min(lpjson['eta_info']['omega_min_EvenDist_list'])
-        # elif estimate_eta_para['min_method'] == 'LocalDist':
-        #     cal_omega_min_LocalDist_list()
-        else:
-            print('Warning: settings in get_eta() are wrong, abort function.')
-            return
-    except:
-        print('Warning: settings in get_eta() are wrong, abort function.')
-
-    eta = (lpjson['order-index'] - omega_min) / (omega_max - omega_min)
-    lpjson['eta'] = eta
-    return eta
-
-
-#更新eta值，即多增加N_omega_min次计算omega_min
-def update_eta(lpjson, estimate_eta_para={}):
-    if (lpjson['eta'] is None) \
-        or (lpjson['eta_info']['omega_max_'+estimate_eta_para['max_method']] is None) \
-        or (len(lpjson['eta_info']['omega_min_'+estimate_eta_para['min_method']+'_list'])==0):
-        print('Wrong & Abort: There is no eta value existed, under the same estimate_eta_para.')
-        print('               get_eta() first and then update_eta().')
-        return
-    else:
-        get_eta(lpjson, estimate_eta_para, use_as_update=True)
-
-
-
 # 画梯图
 def ellipse_len(seq): # 画梯图的associated函数
     # length = np.sqrt(len(seq))/2
     length = (len(seq)**(1/3) )/2
     return length
 
-def draw_laddergraph(lpjson, show_longer_than = 0, style = "ellipse", 
+def draw_laddergraph(lpjson, show_longer_than = 0, 
+    style = "ellipse", 
     TargetNames_UserDefined = None,
     warning_n_ladderons_to_show = 500,
-    rankdir = "BT", color = "grey", figsize = None,
-    save_fig_name = None, figformat = "pdf", cleanGVfile=True):
-    # Draw the laddergraph.
-    # "show_longer_than": When the length of the ladderon > show_longer_than, this ladderon will be displayed.
-    #     Note that "show_longer_than" should always be >= 1, and the basic building blocks are also omitted.
-    # "style" dictates how the laddergraph is displayed. It can either be 
-    #     "ellipse" (the sequence won't be displayed, but the size of the ellipse is positively related to the length of the sequence),
-    #     "ellipse-OnlyShowTargetID" (avoid the ellipse of the target being too large),
-    #     or "box" (the sequence will be displayed),
-    #     or "box-OnlyShowTargetID" (the sequence will be displayed, but only show the target's ID).
-    # "TargetNames_UserDefined"：字典，给出每个target代号的对应名字
-    # "warning_n_ladderons_to_show": The largest number of ladderons allowed to draw.
-    # "rankdir" is the order of the nodes, should be BT (from bottom to top), TB, LR, RL.
-    # "color" can be "grey", "red", "#808080", etc.
-    # "figsize" is size of graph, format: "6,6", default could be "8,8"
-    # "save_fig_name" is the file name of the figure.
-    # "figformat" is the format of the exported figure, which could be "pdf", "png", etc.
-    # "cleanGVfile" 是否删除render图片的.gv格式文件
+    rankdir = "BT", 
+    color = "grey", 
+    figsize = None,
+    save_fig_name = None, 
+    figformat = "pdf", 
+    cleanGVfile=True,
+    render_fig=True,
+    show_node_size=True):
 
-    n_ladderons_to_show = 0
-    for ldID, infoList in lpjson['ladderons'].items():
-        if len(infoList[2]) > show_longer_than:
-            n_ladderons_to_show += 1
-    if n_ladderons_to_show > warning_n_ladderons_to_show:
-        print(f'Warning: too many ladderons (>{n_ladderons_to_show}) to draw!!!')
+    # 查看helpers文件
 
-
-    if style not in ['ellipse', 'ellipse-OnlyShowTargetID', 'box', 'box-OnlyShowTargetID']:
-        print('! Wrong: the parameter \'style\' can only be either \'ellipse\', \'ellipse-OnlyShowTargetID\', \'box\', \'box-OnlyShowTargetID\'')
-        return
-
-    onlyshowtargetid = False
-    if style == "box-OnlyShowTargetID":
-        style = "box"
-        onlyshowtargetid = True
-    if style == "ellipse-OnlyShowTargetID":
-        style = "ellipse"
-        onlyshowtargetid = True
-    
-    ladderons = lpjson['ladderons']    
     fill_lpjson_STR(lpjson) # 先将STR填满缓存
 
-    targets = lpjson['targets']
-    targets_2ID = {val[2]: ID for ID, val in targets.items()} # targets_strs按输入来，不一定是-1，-2，-3...
-    ladderons_2ID = {val[2]: ID for ID, val in ladderons.items()}
-    bbbs_2ID = { val:f'b{i}' for i, val in enumerate(lpjson['basic_building_blocks'])} #按bbb List中的顺序来，赋予其ID b1, b2,...
-    
-    if TargetNames_UserDefined is None: # 为targets定义名字
-        TargetNames_UserDefined = {}
-        for target, ID in targets_2ID.items():
-            TargetNames_UserDefined[ID] = str(ID)
-    # initialize the graph
-    g = graphviz.Digraph()
-    if figsize is None:
-        g.attr(rankdir=rankdir)
-    else:
-        g.attr(rankdir=rankdir, size=figsize)
-    if style == "box": # a detailed version, showing ladderons length
-        g.attr('node', shape='box')
-        for target, ID in targets_2ID.items(): # draw all target sequences
-            if target in ladderons_2ID: # 说明这个target也是梯元
-                if onlyshowtargetid:
-                    g.node(str(ID), label = TargetNames_UserDefined[ID] + ' (&)')
-                else:
-                    g.node(str(ID), label = target + ' (&)')
-            else:
-                if onlyshowtargetid:
-                    g.node(str(ID), label = TargetNames_UserDefined[ID])
-                else:
-                    g.node(str(ID), label = target)
-        if show_longer_than == 0: # display basic building blocks or not
-            for bbb, IDstr in bbbs_2ID.items():
-                g.node(IDstr, label = bbb, shape = 'hexagon', color=color)
+    from . import helpers_laddergraph
 
-    else: # style == "ellipse":
-        g.attr('node', shape='ellipse')
-        for target, ID in targets_2ID.items(): # draw all target sequences
-            length = ellipse_len(target)
-            if target in ladderons_2ID:
-                IDanother = ladderons_2ID[target]
-                templabel = TargetNames_UserDefined[ID] + f'({IDanother})'
-                if onlyshowtargetid:
-                    g.node(str(ID), label = templabel)
-                else:
-                    g.node(str(ID), label = templabel, **{'width':str(length),'height':str(length/2)})
-            else:
-                if onlyshowtargetid:
-                    g.node(str(ID), label = TargetNames_UserDefined[ID])
-                else:
-                    g.node(str(ID), label = TargetNames_UserDefined[ID], **{'width':str(length),'height':str(length/2)})
-        if show_longer_than == 0: # display basic building blocks or not
-            length = ellipse_len( next(iter(bbbs_2ID)) )
-            for bbb, IDstr in bbbs_2ID.items():
-                g.node(IDstr, label = bbb, **{'width':str(length),'height':str(length/2)}, \
-                        shape = 'hexagon', color = color)
+    g = helpers_laddergraph.draw_laddergraph(lpjson, show_longer_than=show_longer_than,
+        style = style, 
+        TargetNames_UserDefined = TargetNames_UserDefined,
+        warning_n_ladderons_to_show = warning_n_ladderons_to_show,
+        rankdir = rankdir, color = color, figsize = figsize,
+        save_fig_name = save_fig_name, figformat = figformat, cleanGVfile=cleanGVfile,
+        render_fig=render_fig,
+        show_node_size=show_node_size)
 
-    for ldID, infoList in ladderons.items():
-        dict_temp = dict()
-        for linkedTo, positions in infoList[3].items(): # 遍历POS
-            if len(infoList[2]) > show_longer_than:
-                if style == "box":
-                    g.node(str(ldID), label = infoList[2], style = 'filled', color=color)
-                else: # style == "ellipse":
-                    lenk = ellipse_len(infoList[2])
-                    g.node(str(ldID), label = str(ldID), **{'width':str(lenk),'height':str(lenk/2)}, \
-                            style = 'filled', color = color)
-                dict_temp[str(ldID), str(linkedTo)] = len(positions)
-
-        for id_linkedto, times in dict_temp.items():
-            for _ in range(times):
-                g.edge(id_linkedto[0], id_linkedto[1], color = color)
-
-    for ID, pos in lpjson['duplications_info'].items(): # 处理targets中有重复的情况
-        if isinstance(pos, int):
-            thismulti = pos - 1  # 字典input形式。duplications_info记录的就是重复次数
-        else:
-            thismulti = len(pos) - 1  # list input形式。duplications_info记录的是重复出现的位置
-        for _ in range(thismulti):
-            g.edge(str( lpjson['targets'][ID][0][0] ), str(ID), color = color)
-
-    if show_longer_than == 0: # display the links from basic building blocks
-        for ldID, infoList in ladderons.items():
-            for comp0 in infoList[0]: # COMP
-                if isinstance(comp0, str):
-                    for bbb in comp0:
-                        g.edge(bbbs_2ID[bbb], str(ldID), color = color)
-        for ldID, infoList in targets.items():
-            if infoList[2] not in ladderons: #如果既是target又是ladderon，这里就不画了，因为上面画过了
-                for comp0 in infoList[0]: # COMP
-                    if isinstance(comp0, str):
-                        for bbb in comp0:
-                            g.edge(bbbs_2ID[bbb], str(ldID), color = color)
-
-    if save_fig_name:
-        g.render(filename=save_fig_name, format=figformat, cleanup=cleanGVfile)
     return g
 
 
 # ================ 辅助函数 ================
-# 判断最初的input strs是否合法
-def valid_input(targets0):
-    for s in targets0:
-        if len(s) <= 1: #不能是最基本单元
-            print('Wrong: There are strings with length 1 or 0!!!')
-            return False
-    return True
-
-
 # basic_building_blocks的计数
 def bbb_multiplicity(lpjson):
     bbb_multi = defaultdict(int)
@@ -937,53 +710,3 @@ def reconstruct_targets_list(lpjson):
             IDtoFill = min(IDtoFill, targetslist[i])
         i += 1
     return targetslist
-
-
-# 关于eta的计算：max，全相同序列的omega（不再按各target长度切割）
-def cal_omega_max_AllIdentical(combined_str):
-    # This function only works for a single sequence
-    temp = bin(len(combined_str))[2:] # Calculate the omega_max of a sequence of length S
-    lpIdx_AllIdentical = len(temp) + temp.count('1') - 1
-    return len(combined_str) - lpIdx_AllIdentical
-
-# 关于eta的计算：max，排序后按照一整个序列combined_str计算，（不再按各target长度切割）
-def cal_omega_max_Sorted(combined_str):
-    sorted_combined_str = ''.join(sorted(combined_str)) # 字符串排序
-    lpindex, sizeindex, _, _ = find_ladderpath([sorted_combined_str])
-    return sizeindex - lpindex
-
-
-# 关于eta的计算：min，随机shuffle原序列（不再按各target长度切割）
-def cal_omega_min_Shuffle_list(combined_str, N_omega_min):
-    omega_min_list = []
-    for _ in range(N_omega_min):
-        temp = list(combined_str)
-        random.shuffle(temp)
-        shuffled_combined_str = ''.join(temp) # 将combined_str打乱
-
-        # strs_new, index = [], 0 # 这是需要切割的方式
-        # for length in targets_len:
-        #     strs_new.append(shuffled_combined_str[index:index+length])
-        #     index += length
-        # lpindex, sizeindex, _, _ = find_ladderpath(strs_new)
-        # omega_min_list.append( sizeindex - lpindex )
-
-        lpindex, sizeindex, _, _ = find_ladderpath([shuffled_combined_str])
-        omega_min_list.append( sizeindex - lpindex )
-    return omega_min_list
-
-
-# 关于eta的计算：min，按照均匀概率分布。（不再按各target长度切割）
-def cal_omega_min_EvenDist_list(combined_str, nBase, nMin):
-    unicode_codes = [chr(i) for i in range(65, 65 + nBase)]
-    omega_min_list = []
-    for _ in range(nMin):
-        sequence = random.choices(unicode_codes, k=len(combined_str))
-        lpindex, sizeindex, _, _ = find_ladderpath([''.join(sequence)])
-        omega_min_list.append( sizeindex - lpindex )
-    return omega_min_list
-
-
-# 关于eta的计算：min，按照原序列的概率分布
-def cal_omega_min_LocalDist_list():
-    pass
