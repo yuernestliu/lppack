@@ -155,7 +155,6 @@ def find_components_with_c(ss: List[LadderonRef], luts: List[Dict[int, List[int]
         idx_cs = [j for _,j in new_idxs]
         if max(idx_cs) - min(idx_cs) < len(p.s):
             return None
-    # print(f"update {p.s} in {ss} with {luts} from {p.idxs} to {new_idxs}")
     return new_idxs
 
 def find_ladderpath_of_level0(ss: List[LadderonRef], components: List[Ladderon]) -> int:
@@ -171,7 +170,6 @@ def find_ladderpath_of_level0(ss: List[LadderonRef], components: List[Ladderon])
     return sum(0 if s is None else len(s.s) for s in ss)
 
 def find_ladderpath_with_cs(ss: List[LadderonRef], p: Pattern, components: List[Ladderon]) -> Tuple[List[LadderonRef], Dict[int, List[int]], int]:
-    # print(f"replace {p.s} in {ss} with {p.idxs}")
     m_idx_cs = defaultdict(list)
     for idx_s, idx_c in p.idxs:
         m_idx_cs[idx_s].append(idx_c)
@@ -207,7 +205,6 @@ def find_ladderpath_with_cs(ss: List[LadderonRef], p: Pattern, components: List[
     c_pos = len(ss) - 1
     for idx_s in m_idx_cs:
         lut[idx_s].append(c_pos)
-    # print(f"got {ss} with {lut}")
     assert replaced_cnt > 1
     components.append(new_ladderon)
     return ss, lut, replaced_cnt - 1
@@ -216,7 +213,6 @@ def find_ladderpath(ss: List[str]) -> Tuple[int, int, int, List[Ladderon]]:
     str_lens = [len(s) for s in ss]
     total_str_len = sum(str_lens)
 
-    # print(f'{len(ss)} strings, max_str_len: {max(str_lens)}, total_str_len: {total_str_len}')
     total_start_time = time()
 
     components = [Ladderon(i, s) for i, s in enumerate(ss)]
@@ -232,7 +228,6 @@ def find_ladderpath(ss: List[str]) -> Tuple[int, int, int, List[Ladderon]]:
     need_recompute = False
     level = len(css) - 1
     new_level = True
-    # print(f'Start from {level} level, components time: {component_end_time - component_start_time}s')
     while level > 0:
         if need_recompute:
             luts = []
@@ -240,19 +235,15 @@ def find_ladderpath(ss: List[str]) -> Tuple[int, int, int, List[Ladderon]]:
             last_duration = component_start_time - component_end_time
             css = find_components(ss)
             component_end_time = time()
-            # print(f'after {last_duration}s, Recompute components using {component_end_time - component_start_time}s')
             need_recompute = False
             assert len(css) - 1 <= level
             if level != len(css) - 1:
                 new_level = True
-                # if level_component_cnt > 0:
-                #     print(f'processed {level} level, {len(ss)} strings, {level_component_cnt} components')
             level = len(css) - 1
             if level <= 0:
                 break
         if new_level:
             level_component_cnt = 0
-            # process_start_time = time()
         new_level = False
         cs = [Pattern(c, 0, idxs) for c, idxs in css[level].items()]
         heapq.heapify(cs)
@@ -281,22 +272,15 @@ def find_ladderpath(ss: List[str]) -> Tuple[int, int, int, List[Ladderon]]:
                 if c is not max_cs:
                     heapq.heappush(cs, c)
             level_component_cnt += 1
-            # if level_component_cnt % 1000 == 0:
-            #     now_time = time()
-            #     print(f'processing {level} level, {len(ss)} strings, {level_component_cnt} components using {now_time - process_start_time}s')
-            #     process_start_time = now_time
             ss, lut, new_lp = find_ladderpath_with_cs(ss, max_cs, components)
             lp += new_lp
             luts.append(lut)
             if need_recompute:
                 break
         if new_level:
-            # if level_component_cnt > 0:
-            #     print(f'processed {level} level, {len(ss)} strings, {level_component_cnt} components')
             level -= 1
     lp += find_ladderpath_of_level0(ss, components)
     duration = time() - total_start_time
-    # print(f'LP: {lp}, order: {total_str_len - lp}, size: {total_str_len}, time: {duration}s')
     for l in components:
         l.COMP = [i for _, i in sorted(l.COMP)]
     
@@ -597,11 +581,6 @@ def POM_from_JSON(lpjson, display_str=False):
 
     return pom_final_pool, pom_str
 
-    # {0: {'A': 3, 'D': 3, 'C': 2, 'B': 1, 'E': 1, 'F': 1},
-    #  1: {'EF': 2, 'BC': 2, 'DCD': 1},
-    #  2: {'DBC': 1},
-    #  3: {'DBCDBC': 1}}
-
 def find_level(x, level_known, lds):
     if x in level_known:
         return level_known[x]
@@ -639,7 +618,6 @@ def disp3index(lpjson):
 
 
 def ellipse_len(seq):
-    # length = np.sqrt(len(seq))/2
     length = (len(seq)**(1/3) )/2
     return length
 

@@ -12,7 +12,6 @@ VALID_STYLES = ("ellipse", "ellipse-OnlyShowTargetID", "box", "box-OnlyShowTarge
 
 
 def ellipse_len(seq):
-    # length = np.sqrt(len(seq))/2
     length = (len(seq) ** (1 / 3)) / 2
     return length
 
@@ -218,25 +217,6 @@ def draw_laddergraph(lpjson, show_longer_than=0,
     cleanGVfile=True,
     render_fig=True,
     show_node_size=True):
-    # Draw the laddergraph.
-    # "show_longer_than": When the length of the ladderon > show_longer_than, this ladderon will be displayed.
-    #     Note that "show_longer_than" should always be >= 1, and the basic building blocks are also omitted.
-    # "style" dictates how the laddergraph is displayed. It can either be
-    #     "ellipse" (the sequence won't be displayed, but the size of the ellipse is positively related to the length of the sequence),
-    #     "ellipse-OnlyShowTargetID" (avoid the ellipse of the target being too large),
-    #     or "box" (the sequence will be displayed),
-    #     or "box-OnlyShowTargetID" (the sequence will be displayed, but only show the target's ID).
-
-    # "warning_n_ladderons_to_show": The largest number of ladderons allowed to draw.
-    # "rankdir" is the order of the nodes, should be BT (from bottom to top), TB, LR, RL.
-    # "color" can be "grey", "red", "#808080", etc.
-    # "figsize" is size of graph, format: "6,6", default could be "8,8"
-    # "save_fig_name" is the file name of the figure. Defalut with '.gv'
-    # "figformat" is the format of the exported figure, which could be "pdf", "png", etc.
-
-
-
-
     ladderons = lpjson["ladderons"]
     _warn_if_too_many_ladderons(ladderons, show_longer_than, warning_n_ladderons_to_show)
 

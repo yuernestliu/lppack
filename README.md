@@ -6,16 +6,6 @@
 
 `lppack` discovers reusable, nested structure in one or more sequences and represents the result as a standard `lpjson` object. The package includes the Ladderpath algorithm, laddergraph visualization, partially ordered multiset (POM) analysis, compression, ladderon ranking, vocabulary-based segmentation and tokenization, inter-species distance calculation, and phylogenetic tree construction.
 
-## Highlights in 3.0.0
-
-- One public package and import path: `import lppack as lp`.
-- CPU, NVIDIA CUDA, and Apple Silicon/MLX computation backends.
-- Unicode-aware accelerated processing for non-ASCII sequences.
-- Standard `lpjson` format version `3.0.0`.
-- Tools for compression, ladderon ranking, segmentation, tokenization, species distances, and phylogeny.
-- Installable directly from GitHub through standard Python packaging.
-- English and Chinese user guides.
-
 ## Requirements
 
 - Python 3.10 or newer.
@@ -197,23 +187,43 @@ The CPU backend may select different equivalent candidates when internal ties oc
 
 ## Related research
 
-Ladderpath is associated with the following publications. Titles and years are included here; complete authors, venue, volume, pages, and DOI metadata will be added when confirmed.
+Ladderpath is associated with the following publications:
 
-### Core methods
-
-1. *Ladderpath: An Efficient Algorithm for Revealing Nested Hierarchy in Sequences* (2025). **[Authors / venue / DOI: TODO]**
-2. *Ladderpath Approach: How Tinkering and Reuse Increase Complexity and Information* (2022). **[Authors / venue / DOI: TODO]**
-
-### Applications
-
-3. *Correlating Measures of Hierarchical Structures in Artificial Neural Networks with Their Performance* (2024). **[Authors / venue / DOI: TODO]**
-4. *Discovery of Highly Bioactive Peptides through Hierarchical Structural Information and Molecular Dynamics Simulations* (2024). **[Authors / venue / DOI: TODO]**
-5. *Evolutionary Tinkering Enriches the Hierarchical and Nested Structures in Amino Acid Sequences* (2024). **[Authors / venue / DOI: TODO]**
+1. **[Method][Linguistics]** [*Measuring language complexity from hierarchical reuse of recurring patterns*](https://arxiv.org/abs/2606.11531) (2026).
+2. **[LLM][Biology]** [*Compression-Based Tokenization Improves Language Modeling of Hierarchical Genomic Structure*](https://langtaosha.org.cn/lts/zh_Hans/preprint/view/51) (2025).
+3. **[Biology][Phylogenetics]** [*Structural Compression for Phylogenetic Inference under Alignment Instability and Indel-Rich Evolution*](https://arxiv.org/abs/2607.15308) (2026).
+4. **[Method][Compression]** [*Text Distance from Nested and Hierarchical Repetitions: A Compression-Based Perspective*](https://arxiv.org/abs/2607.05416) (2026).
+5. **[Biology][Development]** [*Diversity-repeatability trade-off governs hierarchical cell fate coding in multicellular development*](https://www.chinaxiv.org/abs/202512.00064) (2025).
+6. **[Method]** [*Ladderpath: An Efficient Algorithm for Revealing Nested Hierarchy in Sequences*](https://linkinghub.elsevier.com/retrieve/pii/S2590005625002905) (2025).
+7. **[Network][AI]** [*Correlating Measures of Hierarchical Structures in Artificial Neural Networks with Their Performance*](https://www.nature.com/articles/s44260-024-00015-x) (2024).
+8. **[Biology][Drug]** [*Discovery of Highly Bioactive Peptides through Hierarchical Structural Information and Molecular Dynamics Simulations*](https://pubs.acs.org/jcisd8/article-abstract/64/21/8164/852816/Discovery-of-Highly-Bioactive-Peptides-through) (2024).
+9. **[Biology]** [*Evolutionary Tinkering Enriches the Hierarchical and Nested Structures in Amino Acid Sequences*](https://journals.aps.org/prresearch/abstract/10.1103/PhysRevResearch.6.023215) (2024).
+10. **[Method]** [*Ladderpath Approach: How Tinkering and Reuse Increase Complexity and Information*](https://www.mdpi.com/1099-4300/24/8/1082) (2022).
 
 ## Citation
 
-If you use this software, cite the relevant Ladderpath paper and the software release. Machine-readable software citation metadata is provided in [CITATION.cff](CITATION.cff). Bibliographic placeholders will be replaced as publication metadata is confirmed.
+If you use this software, cite the relevant Ladderpath paper and the software release. Machine-readable software citation metadata is provided in [CITATION.cff](CITATION.cff). A commonly used BibTeX citation for this release is:
+
+```bibtex
+@software{lppack_3_0_0,
+  author  = {{ecsLab}},
+  title   = {lppack: Ladderpath Python Toolkit},
+  year    = {2026},
+  version = {3.0.0},
+  url     = {https://github.com/yuernestliu/lppack}
+}
+```
 
 ## License
 
 Licensed under the [Apache License 2.0](LICENSE).
+
+## Highlights in 3.0.0
+
+- One public package and import path: `import lppack as lp`.
+- CPU, NVIDIA CUDA, and Apple Silicon/MLX computation backends.
+- Unicode-aware accelerated processing for non-ASCII sequences.
+- Standard `lpjson` format version `3.0.0`.
+- Tools for compression, ladderon ranking, segmentation, tokenization, species distances, and phylogeny.
+- Installable directly from GitHub through standard Python packaging.
+- English and Chinese user guides.

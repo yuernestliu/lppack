@@ -101,56 +101,6 @@ def _validate_leaves(leaves):
             "Deduplicate leaves before calculating lambda."
         )
 
-
-# def get(leaves1or2, lpjson): # leaves1or2 could only be 1 or 2 leaf
-#     ids = None
-#     if len(leaves1or2) == 1 or len(leaves1or2) == 2:
-#         lp.fill_lpjson_STR(lpjson)
-#         if isinstance(leaves1or2[0], int):
-#             if leaves1or2[0] in lpjson['targets']:
-#                 if len(leaves1or2) == 1:
-#                     ids = leaves1or2
-#                 else: # len(leaves1or2) == 2
-#                     if leaves1or2[1] in lpjson['targets']:
-#                         ids = leaves1or2
-#         else:
-#             ids = get_target_ID(leaves1or2, lpjson)
-    
-#     if ids is None:
-#         print('!!!Wrong: input wrong -> leaves1or2')
-#         return None
-
-#     basic_block_num=0
-#     comp=[]
-#     ladderon_dic={}
-#     for i in ids:
-#         comp+=lpjson["targets"][i][0]
-#     pool=set()
-
-#     while if_id_in_COMP(comp):
-#         ids,basic_blocks=separate_basic_blocks(comp)
-#         comp=[]
-#         basic_block_num+=basic_blocks
-#         id_set=set()
-#         for i in ids:
-#             if i in ladderon_dic:
-#                 ladderon_dic[i]+=1
-#             else:
-#                 ladderon_dic[i]=1
-#             if i not in id_set and i not in pool:
-#                 comp+=lpjson["ladderons"][i][0]
-#                 pool.add(i)
-#                 id_set.add(i)
-
-#     for i in comp:
-#         basic_block_num+=len(i)
-#     count=basic_block_num
-
-#     for ladderon,times in ladderon_dic.items():
-#         count+=(times-1)
-#     return count
-
-    
 def get(leaves, lpjson):
     _validate_leaves(leaves)
     _validate_lpjson_ready(lpjson)

@@ -78,19 +78,6 @@ def init_lcp_for_s_list(d_lcp,d_sa,end_list):
             if start <break_point:
                 cuda.atomic.min(d_lcp,idx,break_point-start)
 
-# @cuda.jit
-# def init_lcp_for_s_list_one(d_lcp,d_sa,end_list):
-#     idx,idy = cuda.grid(1)
-#     if idx < len(d_lcp):
-#         for i in range(1,len(end_list)):
-#             start = d_sa[idx]
-#             valid_len=d_lcp[idx]
-#             break_start=end_list[i-1]
-#             break_end=end_list[i]
-#             if break_start <= start < break_end:
-#                 d_lcp[idx]=min(valid_len,break_end-start)
-
-
 @cuda.jit
 def cal_del_gpu_same_len(d_suffix_array,d_last_select,max_len,d_valid):
     idx =cuda.grid(1)
@@ -208,7 +195,6 @@ def find_most_frequent_longest_substring(suffix_array, lcp, join_s_int, end_list
 
     sum_strs=len(end_list)
     if sum_strs > 1:
-        # blocks_per_grid = math.ceil(len(suffix_array) / threads_per_block)
         threads_block = (32, 16)
         blocks_grid_x = math.ceil(len_s / threads_block[0])
         blocks_grid_y = math.ceil(sum_strs / threads_block[1])
@@ -373,34 +359,6 @@ def find_most_frequent_longest_substring(suffix_array, lcp, join_s_int, end_list
     else:
         return lp
 
-# @cuda.jit
-# def find_father_id(all_start,all_end,ladder_start,father_end_id,father_id):
-#     idx = cuda.grid(1)
-
-#     if idx < ladder_start.shape[0]:
-#         start = ladder_start[idx]
-#         limit = father_end_id[idx]
-
-#         res = -1
-#         for k in range(limit, -1, -1):
-
-#             if all_start[k] <= start < all_end[k]:
-#                 res = k
-
-
-#         father_id[idx] = res
-
-# def find_father_id_chr(father_id_all_chr,ladder_start,ladder_len,ladder_id):
-
-#     fa_id_chr=np.array(father_id_all_chr)
-#     for i in range(len(ladder_start)):
-#         start = ladder_start[i]
-#         end = start + ladder_len[i]
-#         ld_id=ladder_id[i]
-#         fa_id_chr[start:end] = ld_id
-#     return fa_id_chr
-
-
 def find_ladderpath(s_list, model=0, ch=False):
     ch = ch or any(not s.isascii() for s in s_list)
 
@@ -488,15 +446,6 @@ def find_ladderpath(s_list, model=0, ch=False):
 
         return lp,end, ta_ld_dic,basic_blocks
 
-
-
-# def get_lp(s_list,ch=False):
-
-#     return find_ladderpath(s_list,0,ch)
-
-# def get_lp_with_w(s_list,ch=False):
-
-#     return find_ladderpath(s_list,1,ch)
 
 
 def get_ladderpath(ss, ch=False, show_version=True):

@@ -6,16 +6,6 @@
 
 `lppack` 用于发现一个或多个序列中可复用的嵌套结构，并将结果表示为标准 `lpjson`。本项目包括梯径主算法、梯图可视化、偏序多重集 POM、压缩、梯元排序、基于词表的分词与 tokenizer、物种距离和系统发生树等工具。
 
-## 3.0.0 主要内容
-
-- 统一的公开包名与导入方式：`import lppack as lp`。
-- 支持 CPU、NVIDIA CUDA 和 Apple Silicon/MLX 三种计算后端。
-- 加速后端支持中文等非 ASCII 序列的 Unicode 字符坐标。
-- 标准 `lpjson` 格式版本为 `3.0.0`。
-- 包含压缩、梯元排序、分词、tokenizer、物种距离和系统发生树工具。
-- 支持通过标准 Python 打包方式直接从 GitHub 安装。
-- 提供中文和英文操作手册。
-
 ## 环境要求
 
 - Python 3.10 或更高版本。
@@ -197,23 +187,43 @@ CPU 后端在内部出现等价候选时可能选择不同结果，因此重复�
 
 ## 相关论文
 
-Ladderpath 与以下论文相关。目前先保留标题和年份；作者、期刊、卷期页码和 DOI 等信息将在确认后补齐。
+Ladderpath 与以下论文相关：
 
-### 核心方法
-
-1. *Ladderpath: An Efficient Algorithm for Revealing Nested Hierarchy in Sequences*（2025）。**[作者 / 期刊 / DOI：待补]**
-2. *Ladderpath Approach: How Tinkering and Reuse Increase Complexity and Information*（2022）。**[作者 / 期刊 / DOI：待补]**
-
-### 应用研究
-
-3. *Correlating Measures of Hierarchical Structures in Artificial Neural Networks with Their Performance*（2024）。**[作者 / 期刊 / DOI：待补]**
-4. *Discovery of Highly Bioactive Peptides through Hierarchical Structural Information and Molecular Dynamics Simulations*（2024）。**[作者 / 期刊 / DOI：待补]**
-5. *Evolutionary Tinkering Enriches the Hierarchical and Nested Structures in Amino Acid Sequences*（2024）。**[作者 / 期刊 / DOI：待补]**
+1. **[Method][Linguistics]** [*Measuring language complexity from hierarchical reuse of recurring patterns*](https://arxiv.org/abs/2606.11531)（2026）。
+2. **[LLM][Biology]** [*Compression-Based Tokenization Improves Language Modeling of Hierarchical Genomic Structure*](https://langtaosha.org.cn/lts/zh_Hans/preprint/view/51)（2025）。
+3. **[Biology][Phylogenetics]** [*Structural Compression for Phylogenetic Inference under Alignment Instability and Indel-Rich Evolution*](https://arxiv.org/abs/2607.15308)（2026）。
+4. **[Method][Compression]** [*Text Distance from Nested and Hierarchical Repetitions: A Compression-Based Perspective*](https://arxiv.org/abs/2607.05416)（2026）。
+5. **[Biology][Development]** [*Diversity-repeatability trade-off governs hierarchical cell fate coding in multicellular development*](https://www.chinaxiv.org/abs/202512.00064)（2025）。
+6. **[Method]** [*Ladderpath: An Efficient Algorithm for Revealing Nested Hierarchy in Sequences*](https://linkinghub.elsevier.com/retrieve/pii/S2590005625002905)（2025）。
+7. **[Network][AI]** [*Correlating Measures of Hierarchical Structures in Artificial Neural Networks with Their Performance*](https://www.nature.com/articles/s44260-024-00015-x)（2024）。
+8. **[Biology][Drug]** [*Discovery of Highly Bioactive Peptides through Hierarchical Structural Information and Molecular Dynamics Simulations*](https://pubs.acs.org/jcisd8/article-abstract/64/21/8164/852816/Discovery-of-Highly-Bioactive-Peptides-through)（2024）。
+9. **[Biology]** [*Evolutionary Tinkering Enriches the Hierarchical and Nested Structures in Amino Acid Sequences*](https://journals.aps.org/prresearch/abstract/10.1103/PhysRevResearch.6.023215)（2024）。
+10. **[Method]** [*Ladderpath Approach: How Tinkering and Reuse Increase Complexity and Information*](https://www.mdpi.com/1099-4300/24/8/1082)（2022）。
 
 ## 引用
 
-如果在研究中使用本软件，请同时引用相关 Ladderpath 论文和软件版本。机器可读的软件引用信息见 [CITATION.cff](CITATION.cff)。论文书目信息确认后将替换当前 placeholder。
+如果在研究中使用本软件，请同时引用相关 Ladderpath 论文和软件版本。机器可读的软件引用信息见 [CITATION.cff](CITATION.cff)。本版本常用的 BibTeX 引用格式如下：
+
+```bibtex
+@software{lppack_3_0_0,
+  author  = {{ecsLab}},
+  title   = {lppack: Ladderpath Python Toolkit},
+  year    = {2026},
+  version = {3.0.0},
+  url     = {https://github.com/yuernestliu/lppack}
+}
+```
 
 ## 许可证
 
 本项目使用 [Apache License 2.0](LICENSE)。
+
+## 3.0.0 主要内容
+
+- 统一的公开包名与导入方式：`import lppack as lp`。
+- 支持 CPU、NVIDIA CUDA 和 Apple Silicon/MLX 三种计算后端。
+- 加速后端支持中文等非 ASCII 序列的 Unicode 字符坐标。
+- 标准 `lpjson` 格式版本为 `3.0.0`。
+- 包含压缩、梯元排序、分词、tokenizer、物种距离和系统发生树工具。
+- 支持通过标准 Python 打包方式直接从 GitHub 安装。
+- 提供中文和英文操作手册。
