@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+message: >-
+  If you use lppack in research, please cite this software release and the
+  relevant Ladderpath publication.
+title: "lppack: Ladderpath Python Toolkit"
+type: software
+authors:
+  - name: "ecsLab"
+abstract: >-
+  A Python toolkit for discovering nested hierarchical structure in sequences
+  and representing it as a standard Ladderpath JSON object.
+version: 3.0.0
+date-released: "2026-09-02"
+license: Apache-2.0
+repository-code: "https://github.com/yuernestliu/lppack"
+url: "https://github.com/yuernestliu/lppack"
+keywords:
+  - ladderpath
+  - hierarchy
+  - sequence analysis
+  - compression
+  - phylogeny
+
+# TODO: Add the confirmed authors, venue, pages, and DOI of the primary
+# Ladderpath paper as `preferred-citation` when the bibliographic record is
+# supplied.

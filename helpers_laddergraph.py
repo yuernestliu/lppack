@@ -1,5 +1,5 @@
 """
-Version 2.0.21
+Version 3.0.0
 Authors: ecsLab
 Data: 2026.06.12
 """
@@ -11,7 +11,7 @@ from .ladderpath import POM_from_JSON
 VALID_STYLES = ("ellipse", "ellipse-OnlyShowTargetID", "box", "box-OnlyShowTargetID")
 
 
-def ellipse_len(seq):  # 画梯图的associated函数
+def ellipse_len(seq):
     # length = np.sqrt(len(seq))/2
     length = (len(seq) ** (1 / 3)) / 2
     return length
@@ -41,9 +41,9 @@ def _normalize_style(style):
 def _build_lookup_tables(lpjson):
     targets = lpjson["targets"]
     ladderons = lpjson["ladderons"]
-    targets_2ID = {val[2]: ID for ID, val in targets.items()}  # targets_strs按输入来，不一定是-1，-2，-3...
+    targets_2ID = {val[2]: ID for ID, val in targets.items()}
     ladderons_2ID = {val[2]: ID for ID, val in ladderons.items()}
-    bbbs_2ID = {val: f"b{i}" for i, val in enumerate(lpjson["basic_building_blocks"])}  # 按bbb List中的顺序来，赋予其ID b1, b2,...
+    bbbs_2ID = {val: f"b{i}" for i, val in enumerate(lpjson["basic_building_blocks"])}
 
     multi_from_pom, _ = POM_from_JSON(lpjson)
     multi_bbb = multi_from_pom[0]
@@ -88,7 +88,7 @@ def _multiplicity_suffix(multiplicity):
 
 
 def _target_label(target, ID, ladderons_2ID, TargetNames_UserDefined, onlyshowtargetid, show_node_size):
-    if target in ladderons_2ID:  # 说明这个target也是梯元
+    if target in ladderons_2ID:
         return f"& {ladderons_2ID[target]}"
 
     target_name = TargetNames_UserDefined[ID] if onlyshowtargetid else target
@@ -143,7 +143,7 @@ def _draw_ladderons(g, ladderons, multi_ladderons, style, show_longer_than, colo
             continue
 
         edge_counts = {}
-        for linkedTo, positions in infoList[3].items():  # 遍历POS
+        for linkedTo, positions in infoList[3].items():
             edge_counts[str(ldID), str(linkedTo)] = len(positions)
 
         if not edge_counts:
@@ -171,11 +171,11 @@ def _draw_ladderons(g, ladderons, multi_ladderons, style, show_longer_than, colo
 
 
 def _draw_duplication_edges(g, lpjson, color):
-    for ID, pos in lpjson["duplications_info"].items():  # 处理targets中有重复的情况
+    for ID, pos in lpjson["duplications_info"].items():
         if isinstance(pos, int):
-            thismulti = pos - 1  # 字典input形式。duplications_info记录的就是重复次数
+            thismulti = pos - 1
         else:
-            thismulti = len(pos) - 1  # list input形式。duplications_info记录的是重复出现的位置
+            thismulti = len(pos) - 1
         for _ in range(thismulti):
             g.edge(str(lpjson["targets"][ID][0][0]), str(ID), color=color)
 
@@ -188,7 +188,7 @@ def _draw_basic_block_edges(g, targets, ladderons, bbbs_2ID, color):
                     g.edge(bbbs_2ID[bbb], str(ldID), color=color)
 
     for ldID, infoList in targets.items():
-        if infoList[2] not in ladderons:  # 如果既是target又是ladderon，这里就不画了，因为上面画过了
+        if infoList[2] not in ladderons:
             for comp0 in infoList[0]:  # COMP
                 if isinstance(comp0, str):
                     for bbb in comp0:
@@ -205,7 +205,7 @@ def _render_if_requested(g, save_fig_name, figformat, cleanGVfile, render_fig):
             g.save(filename=save_fig_name)
 
 
-# 画梯图
+
 def draw_laddergraph(lpjson, show_longer_than=0, 
     style="ellipse",
     TargetNames_UserDefined=None,
@@ -226,16 +226,16 @@ def draw_laddergraph(lpjson, show_longer_than=0,
     #     "ellipse-OnlyShowTargetID" (avoid the ellipse of the target being too large),
     #     or "box" (the sequence will be displayed),
     #     or "box-OnlyShowTargetID" (the sequence will be displayed, but only show the target's ID).
-    # "TargetNames_UserDefined"：字典，给出每个target代号的对应名字
+
     # "warning_n_ladderons_to_show": The largest number of ladderons allowed to draw.
     # "rankdir" is the order of the nodes, should be BT (from bottom to top), TB, LR, RL.
     # "color" can be "grey", "red", "#808080", etc.
     # "figsize" is size of graph, format: "6,6", default could be "8,8"
     # "save_fig_name" is the file name of the figure. Defalut with '.gv'
     # "figformat" is the format of the exported figure, which could be "pdf", "png", etc.
-    # "cleanGVfile" 是否删除render图片的.gv格式文件
-    # "render_fig" 是否调用Graphviz渲染图片；若为False，只保存.gv源文件
-    # "show_node_size" 是否在target和ladderon的label中显示节点长度
+
+
+
 
     ladderons = lpjson["ladderons"]
     _warn_if_too_many_ladderons(ladderons, show_longer_than, warning_n_ladderons_to_show)

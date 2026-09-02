@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-Version 6.6
+Version 3.0.0
 Authors: ecsLab (Jing Wang, Xinting Yuan, Yu Liu, Codex, et al.)
 Date: 2026.06.12
 
@@ -88,16 +88,16 @@ def import_ladderpath():
         return lp
     except Exception:
         sys.modules.setdefault("graphviz", types.SimpleNamespace())
-        repo_root = os.environ.get("LP_DEVELOPERS_REPO_ROOT")
+        repo_root = os.environ.get("LPPACK_REPO_ROOT")
         if repo_root and repo_root not in sys.path:
             sys.path.append(repo_root)
         try:
-            import lp_developers.ladderpath as lp
+            import lppack.ladderpath as lp
         except Exception as exc:
             raise ImportError(
-                "Could not import lp_developers.ladderpath. Run this module inside the "
-                "lp_developers package, install lp_developers, or set LP_DEVELOPERS_REPO_ROOT "
-                "to the repository root before calling sortout."
+                "Could not import lppack.ladderpath. Run this module inside the "
+                "lppack package, install lppack, or set LPPACK_REPO_ROOT "
+                "to the repository parent directory before calling sortout."
             ) from exc
 
         return lp

@@ -1,75 +1,51 @@
-# lp_developers
+# lppack
 
-`lp_developers` 是梯径 Ladderpath 的 Python 开发仓库，用于把一个或多个字符串序列计算为标准 `lpjson`，并围绕 `lpjson` 提供梯图可视化、偏序多重集 POM、压缩、梯元排序、分词、距离矩阵和系统发生树等工具。
+**Ladderpath Python Toolkit — version 3.0.0**
 
-当前主要入口是：
+[中文 README](README.zh-CN.md) · [English user guide](docs/user-guide.en.md) · [中文操作手册](docs/user-guide.zh-CN.md) · [Changelog](docs/CHANGELOG.md) · [Citation](CITATION.cff)
 
-```python
-import lp_developers.ladderpath as lp
+`lppack` discovers reusable, nested structure in one or more sequences and represents the result as a standard `lpjson` object. The package includes the Ladderpath algorithm, laddergraph visualization, partially ordered multiset (POM) analysis, compression, ladderon ranking, vocabulary-based segmentation and tokenization, inter-species distance calculation, and phylogenetic tree construction.
 
-lpjson = lp.get_ladderpath(
-    strs,
-    fill_ladderons_STR=False,
-    save_file_name=None,
-    show_version=True,
-    mode='cpu',
-)
-```
+## Highlights in 3.0.0
 
-`mode` 只接受 `'cpu'`、`'gpu-cuda'`、`'macm'`。
+- One public package and import path: `import lppack as lp`.
+- CPU, NVIDIA CUDA, and Apple Silicon/MLX computation backends.
+- Unicode-aware accelerated processing for non-ASCII sequences.
+- Standard `lpjson` format version `3.0.0`.
+- Tools for compression, ladderon ranking, segmentation, tokenization, species distances, and phylogeny.
+- Installable directly from GitHub through standard Python packaging.
+- English and Chinese user guides.
 
-## 文档
+## Requirements
 
-- 详细操作说明见 [操作手册.md](操作手册.md)。
-- 完整版本记录见 [_backup_readme_files/CHANGELOG.md](_backup_readme_files/CHANGELOG.md)。
-- 当前 `lpjson` 标准格式版本为 `v1.1`。
+- Python 3.10 or newer.
+- Installing `lppack` installs all Python dependencies for every included feature.
+- CUDA and Apple Silicon acceleration still require compatible hardware and system software.
 
-## 安装
+## Installation
 
-目前推荐直接从 GitHub 克隆或下载源码后，将仓库所在目录加入 Python path。
+Install the current release directly from GitHub:
 
 ```bash
-git clone https://github.com/yuernestliu/lp_developers.git
+python -m pip install git+https://github.com/yuernestliu/lppack.git
 ```
 
-如果 `lp_developers` 放在 `/Users/ecslab/codes/` 下，可这样导入：
-
-```python
-import sys
-
-sys.path.append("/Users/ecslab/codes")
-
-import lp_developers.ladderpath as lp
-```
-
-基础 CPU 计算主要使用 Python 标准库。按功能可选择安装以下依赖：
+For development or editable use:
 
 ```bash
-pip install graphviz tqdm
+git clone https://github.com/yuernestliu/lppack.git
+cd lppack
+python -m pip install -e .
 ```
 
-如果需要 CUDA GPU 后端：
+Both installation methods install NumPy, Numba, pydivsufsort, MLX on compatible Apple Silicon systems, Graphviz's Python binding, tqdm, Jieba, SciPy, Matplotlib, and Biopython automatically.
+
+The `graphviz` package installed by `pip` is a Python interface. It does not install the Graphviz system application or its `dot` executable. The core Ladderpath computations do not use `dot`: if the Graphviz system application is not installed, or its installation is unsuccessful, you can still compute and inspect Ladderpaths normally. The system application is needed only when rendering laddergraphs as PDF, PNG, or other image files.
+
+Install the Graphviz system application only if you need image rendering:
 
 ```bash
-pip install numpy numba pydivsufsort
-```
-
-如果需要 Mac M 系列 Apple GPU 后端，需要使用原生 arm64 Python 环境：
-
-```bash
-pip install numpy pydivsufsort mlx
-```
-
-如果需要系统发生树绘制：
-
-```bash
-pip install scipy matplotlib biopython
-```
-
-如果需要渲染梯图图片，除 Python 包 `graphviz` 外，还需要安装系统 Graphviz 程序。`brew install graphviz` 只是 macOS + Homebrew 用户的安装示例，不是必须使用 `brew`。
-
-```bash
-# macOS, Homebrew
+# macOS with Homebrew
 brew install graphviz
 
 # Ubuntu / Debian
@@ -79,90 +55,104 @@ sudo apt-get install graphviz
 conda install -c conda-forge graphviz python-graphviz
 ```
 
-## 快速开始
+On Windows, install Graphviz with Windows Package Manager:
 
-### CPU 计算
+```powershell
+winget install graphviz
+```
+
+Alternatively, download a 64-bit EXE installer from the [official Graphviz download page](https://graphviz.org/download/). Open a new Command Prompt or PowerShell window after installation and run `dot -V`. If Windows reports that `dot` is not recognized, add Graphviz to `PATH` manually:
+
+1. Find Graphviz's `bin` directory, usually `C:\Program Files\Graphviz\bin`.
+2. Open the Start menu, search for **Edit the system environment variables**, and select **Environment Variables**.
+3. Under **User variables**, select **Path**, choose **Edit** and then **New**, and add the `bin` directory.
+4. Confirm all dialogs, close and reopen your terminal or IDE, and run `dot -V` again.
+
+## Quick start
 
 ```python
-import lp_developers.ladderpath as lp
+import lppack as lp
 
-strs = ['ABCDBCDBCDCDEFEF', 'AA', 'DBCDBCA', 'BCDCDAEF']
+targets = [
+    "ABCDBCDBCDCDEFEF",
+    "AA",
+    "DBCDBCA",
+    "BCDCDAEF",
+]
 
 lpjson = lp.get_ladderpath(
-    strs,
+    targets,
     fill_ladderons_STR=False,
     save_file_name=None,
     show_version=True,
-    mode='cpu',
+    mode="cpu",
 )
+
+ladderpath_index, order_index, size_index = lp.disp3index(lpjson)
 ```
 
-如果输入中有重复 target，请使用 `dict[str, int]` 表示重复次数：
+The three returned measures are:
+
+- **Ladderpath index**: the size of the Ladderpath representation.
+- **Order index**: `size-index - ladderpath-index`.
+- **Size index**: the total length of all targets, including multiplicity.
+
+### Repeated targets
+
+A `list[str]` must not contain duplicate strings. Represent repeated targets with an insertion-ordered `dict[str, int]`:
 
 ```python
-strs = {
-    'ABCDBCDBCDCDEFEF': 1,
-    'AA': 3,
-    'DBCDBCA': 2,
-    'BCDCDAEF': 1,
+targets = {
+    "ABCDBCDBCDCDEFEF": 1,
+    "AA": 3,
+    "DBCDBCA": 2,
+    "BCDCDAEF": 1,
 }
 
-lpjson = lp.get_ladderpath(strs, show_version=False, mode='cpu')
+lpjson = lp.get_ladderpath(targets, show_version=False, mode="cpu")
 ```
 
-输入规则：
+Every target must contain at least two characters.
 
-- `list[str]` 中不能有重复字符串。
-- 如果有重复字符串，必须用 `dict[str, int]`。
-- target 不能是单字符字符串。
+## Computation backends
 
-### CUDA GPU 计算
+| Mode | Platform | Notes |
+| --- | --- | --- |
+| `cpu` | Any supported Python platform | Default; standard-library implementation |
+| `gpu-cuda` | NVIDIA GPU with a working CUDA environment | Uses Numba, NumPy, and pydivsufsort |
+| `macm` | Native arm64 Python on Apple Silicon macOS | Uses MLX Metal, NumPy, and pydivsufsort |
 
-CUDA 后端文件是 `ladderpath_cuda.py`，公开入口仍然通过 `ladderpath.py` 调用：
+The public call is the same for every backend:
 
 ```python
-lpjson = lp.get_ladderpath(strs, show_version=True, mode='gpu-cuda')
+lpjson_cuda = lp.get_ladderpath(targets, mode="gpu-cuda")
+lpjson_mac = lp.get_ladderpath(targets, mode="macm")
 ```
 
-该模式需要可用的 NVIDIA CUDA 环境，以及 `numba`、`numpy`、`pydivsufsort`。
-对于中文等非 ASCII 输入，程序会自动使用 Unicode 字符坐标，避免 UTF-8 字节坐标与字符坐标混用。
+Hardware acceleration is used only when requested. Selecting an unavailable backend raises an error instead of silently falling back to CPU.
 
-### Mac M 系列 GPU 计算
+## Common operations
 
-Mac M 系列后端文件是 `ladderpath_macm.py`，使用 Apple Silicon / MLX Metal：
+### Save and load `lpjson`
 
 ```python
-lpjson = lp.get_ladderpath(strs, show_version=True, mode='macm')
+lp.save_ladderpath_json(lpjson, "result.json")
+lpjson = lp.load_ladderpath_json("result.json")
 ```
 
-该模式需要 macOS、Apple Silicon 原生 arm64 Python 环境，以及 `mlx`、`numpy`、`pydivsufsort`。
-对于中文等非 ASCII 输入，程序会自动使用 Unicode 字符坐标。
+Use `load_ladderpath_json()` rather than plain `json.load()` when the integer IDs in `targets`, `ladderons`, and position maps must be restored.
 
-## 常用功能
-
-### 查看三个指标
+### Obtain a POM representation
 
 ```python
-index3 = lp.disp3index(lpjson)
+pom, pom_text = lp.POM_from_JSON(lpjson, display_str=True)
 ```
 
-返回或显示梯径度、有序度和规模度。
-
-### POM 表示
+### Draw a laddergraph
 
 ```python
-pom, pom_str = lp.POM_from_JSON(lpjson, display_str=False)
-```
-
-`pom` 是偏序多重集的字典表示，`pom_str` 是可读字符串表示。
-
-### 画梯图
-
-```python
-g = lp.draw_laddergraph(
+graph = lp.draw_laddergraph(
     lpjson,
-    show_longer_than=0,
-    style="ellipse",
     save_fig_name="laddergraph",
     figformat="pdf",
     render_fig=True,
@@ -170,72 +160,60 @@ g = lp.draw_laddergraph(
 )
 ```
 
-如果只想输出 `.gv` 文件而不渲染图片：
+Only image rendering requires the Graphviz system executable; all core Ladderpath computations work without it. Its Python binding is installed with `lppack`.
 
-```python
-g = lp.draw_laddergraph(
-    lpjson,
-    save_fig_name="laddergraph",
-    render_fig=False,
-)
-```
+## Included tools
 
-### 保存和读取 lpjson
+| Module | Purpose |
+| --- | --- |
+| `ladderpath_tools.compress` | Encode `lpjson` as streams and entropy-coded `.lpe1` bytes |
+| `ladderpath_tools.lambda_from_laddergraph` | Recalculate lambda for selected targets in an existing laddergraph |
+| `ladderpath_tools.sortout` | Rank ladderons and build vocabularies |
+| `ladderpath_tools.segment` | Segment text with a vocabulary |
+| `ladderpath_tools.tokenizer` | High-level encode/decode wrapper |
+| `ladderpath_tools.species_distance` | Build Jaccard- or Dice-style inter-species distance tables |
+| `ladderpath_tools.phylo` | Build NJ or UPGMA phylogenetic trees |
 
-```python
-lp.save_ladderpath_json(lpjson, "result.json")
-lpjson = lp.load_ladderpath_json("result.json")
-```
+## Documentation
 
-`load_ladderpath_json()` 会自动把 JSON 中的字典 key 转回整数。
+- [English user guide](docs/user-guide.en.md)
+- [中文操作手册](docs/user-guide.zh-CN.md)
+- [Changelog](docs/CHANGELOG.md)
+- [Machine-readable citation metadata](CITATION.cff)
 
-## `ladderpath_tools`
+## `lpjson` and reproducibility
 
-本仓库还包含若干围绕 `lpjson` 的工具模块：
+The software release and `lpjson` format are both version `3.0.0`. Saved objects record the format in `lpjson["info"]`.
 
-- `compress.py`: 将 `lpjson` 编码为 streams，并进一步做熵编码压缩。
-- `lambda_from_laddergraph.py`: 从已有 laddergraph / lpjson 中计算指定 leaves 的 lambda。
-- `sortout.py`: 对梯元进行排序，支持 `contribution_folded`、`contribution_frozen`、`multiplicity`。
-- `segment.py`: 基于词表进行分词切割。
-- `tokenizer.py`: `LadderpathTokenizer`，封装 encode / decode。
-- `species_distance.py`: 基于 `lpjson` 计算 species distance table。
-- `phylo.py`: 基于距离矩阵生成系统发生树。
-- `orderrate.py`: 计算 eta 的开发工具。
+The CPU backend may select different equivalent candidates when internal ties occur, so repeated runs are not guaranteed to produce byte-identical `lpjson` objects. The CUDA and Apple Silicon backends are designed to be deterministic for the same input and backend. Validate exact cross-backend equality for any workflow that depends on byte-for-byte identity.
 
-详细示例见 [操作手册.md](操作手册.md)。
+## Migration from 2.x
 
-## 版本、兼容性与确定性
+- Use `import lppack as lp` instead of importing `ladderpath` or a private development package.
+- Install the repository with `pip` instead of modifying `sys.path`.
+- Select acceleration through `mode="cpu"`, `mode="gpu-cuda"`, or `mode="macm"`.
+- Duplicate strings are represented with `dict[str, int]`, not repeated entries in a list.
+- The `lpjson` format identifier is now `3.0.0`.
 
-当前主要版本：
+## Related research
 
-- `ladderpath.py`: `v2.0.21`
-- `helpers_laddergraph.py`: `v2.0.21`
-- `ladderpath_cuda.py`: `v1.4`
-- `ladderpath_macm.py`: `v1.1`
-- `lpjson`: `v1.1`
+Ladderpath is associated with the following publications. Titles and years are included here; complete authors, venue, volume, pages, and DOI metadata will be added when confirmed.
 
-确定性说明：
+### Core methods
 
-- CPU 后端目前不承诺完全确定性；在存在等价候选或内部 tie-breaking 的情况下，运行结果允许出现小差异，通常表现为 `lpjson` 结构或梯径度的轻微差别。
-- CUDA 后端和 macm 后端当前目标是确定性的：同一输入在同一后端重复运行，应输出一致的完整 `lpjson`。
-- CUDA 与 macm 后端目标是保持完整 `lpjson` 一致。
-- CPU 后端和 GPU 后端在部分样本上可能存在很小差异；通常梯径度数值接近。
+1. *Ladderpath: An Efficient Algorithm for Revealing Nested Hierarchy in Sequences* (2025). **[Authors / venue / DOI: TODO]**
+2. *Ladderpath Approach: How Tinkering and Reuse Increase Complexity and Information* (2022). **[Authors / venue / DOI: TODO]**
 
-需要严格对比后端输出时，可使用 `benchmarks/cuda_macm_parity.py`。
+### Applications
 
-## Benchmark 与测试
+3. *Correlating Measures of Hierarchical Structures in Artificial Neural Networks with Their Performance* (2024). **[Authors / venue / DOI: TODO]**
+4. *Discovery of Highly Bioactive Peptides through Hierarchical Structural Information and Molecular Dynamics Simulations* (2024). **[Authors / venue / DOI: TODO]**
+5. *Evolutionary Tinkering Enriches the Hierarchical and Nested Structures in Amino Acid Sequences* (2024). **[Authors / venue / DOI: TODO]**
 
-CUDA simulator 与 macm 的一致性检查示例：
+## Citation
 
-```bash
-NUMBA_ENABLE_CUDASIM=1 python benchmarks/cuda_macm_parity.py emit --backend cuda_sim
-python benchmarks/cuda_macm_parity.py emit --backend macm
-python benchmarks/cuda_macm_parity.py emit --backend cpu
-python benchmarks/cuda_macm_parity.py compare
-```
-
-注意：CUDA simulator 只适合验证结果，不代表真实 CUDA GPU 速度。
+If you use this software, cite the relevant Ladderpath paper and the software release. Machine-readable software citation metadata is provided in [CITATION.cff](CITATION.cff). Bibliographic placeholders will be replaced as publication metadata is confirmed.
 
 ## License
 
-见 [LICENSE](LICENSE)。
+Licensed under the [Apache License 2.0](LICENSE).

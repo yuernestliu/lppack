@@ -1,10 +1,10 @@
 """
-Version 1.4
+Version 3.0.0
 Authors: Hu Zhu
 Data: 2026.06.12
 
-CUDA GPU计算梯径版本
-只计算非重复targets；而duplication_info由主程序处理
+CUDA GPU backend for Ladderpath.
+This module receives unique targets; the public entry point handles multiplicity.
 """
 
 import json
@@ -16,12 +16,12 @@ from numba import cuda
 import numpy as np
 import os
 from numba import njit
-import pydivsufsort as pyd #需要手动在github上复制安装代码，pycharm上安装会失败
+import pydivsufsort as pyd
 os.environ['NUMBA_CUDA_LOW_OCCUPANCY_WARNINGS'] = '0'
 
 
-VERSION_ladderpathpy_cuda = 'v1.4'
-VERSION_lpjson = 'v1.1' # 保持最新版本
+VERSION_ladderpathpy_cuda = '3.0.0'
+VERSION_lpjson = '3.0.0'
 
 
 @cuda.jit
@@ -39,7 +39,7 @@ def cal_delect_gpu(d_suffix_array,d_lcp,now_pos,now_pos_del,now_len):
                 return
             start = pos
             end = pos + now_len-1
-            #所有产生不同分支结果的状态有三种:1.end < this_start or start > this_end 2.不满足1且start <= this_start 3.不满足1且start > this_start
+
             if end < this_start or start > this_end:
                 continue
             elif start <= this_start:
@@ -110,7 +110,7 @@ def cal_del_gpu_same_len_v1(d_suffix_array, d_last_select, max_len, d_valid):
     if idx >= len(d_suffix_array):
         return
 
-    if not d_valid[idx]:  # 如果已经被标记为无效，则跳过
+    if not d_valid[idx]:
         return
 
     this_start = d_suffix_array[idx]
@@ -118,7 +118,7 @@ def cal_del_gpu_same_len_v1(d_suffix_array, d_last_select, max_len, d_valid):
     if n_select == 0:
         return
 
-    #开始二分查找
+
     low = 0
     high = n_select
     while low < high:
@@ -242,39 +242,39 @@ def find_most_frequent_longest_substring(suffix_array, lcp, join_s_int, end_list
             max_len = lcp.max()
             if max_len < 2:
                 break
-            # 单次遍历，用字典收集 + 维护最优解
+
 
             temp_mask= lcp == max_len
             temp_sa=suffix_array[temp_mask]
             lcp = np.where(lcp==max_len, lcp - 1, lcp)
             if temp_sa.size < 2:
-                # print(f'{max_len}空0')
+
                 selected = []
                 continue
 
             n_suffixes = len(temp_sa)
             d_suffixes = cuda.to_device(temp_sa)
-            d_breakpoints = cuda.device_array(n_suffixes - 1, dtype=np.bool_)  # 只需n-1个
+            d_breakpoints = cuda.device_array(n_suffixes - 1, dtype=np.bool_)
 
             blocks_per_grid = math.ceil((n_suffixes - 1) / threads_per_block)
             find_breakpoints_gpu[blocks_per_grid, threads_per_block](
                 d_text, d_suffixes, d_breakpoints, max_len
             )
-            # 复制回主机
+
             breakpoints = d_breakpoints.copy_to_host()  # shape: (n_suffixes-1,)
-            # 找到所有断点位置（True的索引）
-            break_indices = np.where(breakpoints)[0]  # 返回的是True的索引
+
+            break_indices = np.where(breakpoints)[0]
             if break_indices.size == n_suffixes-1:
-                # print(f'{max_len}空1,{temp_sa.size}')
+
                 selected = []
                 continue
-            # 构建分组起始位置：始终从0开始，加上每个断点+1的位置
+
             group_starts = np.concatenate([[0], break_indices + 1])
             group_ends = np.concatenate([break_indices + 1, [n_suffixes]])
 
             new_sa=np.array([], dtype=np.int64)
 
-            #整理字典，初步选取
+
             now_start=0
             start_end=[]
             count_sub_str=0
@@ -299,34 +299,34 @@ def find_most_frequent_longest_substring(suffix_array, lcp, join_s_int, end_list
             selected=[]
             selected_del=[]
             while True:
-                #一百万1.9秒
+
                 count_non_overlap_gpu[blocks_per_grid_substr, threads_per_block](
                     d_sort_sa, d_valid_flag, d_str_pos_in_sa, max_len, d_non_overlap_len
                 )
 
-                #数据传输与cpu计算，一百万2.2秒
+
                 non_overlap_len=d_non_overlap_len.copy_to_host()
                 max_index=np.argmax(non_overlap_len)
                 max_count=int(non_overlap_len[max_index])
 
                 if max_count < 2:
-                    # print(f'{max_len}空2')
+
                     break
 
-                #一百万1.5秒
+
                 d_non_overlap_pos_out = cuda.device_array(max_count, dtype=np.int64)
 
-                #一百万2.1秒
+
                 get_max_non_overlap_pos[1, 128](
                     d_sort_sa, d_valid_flag, d_str_pos_in_sa,
                     max_index, max_len,
                     d_non_overlap_pos_out
                 )
 
-                #数据传输，一百万1.8秒
+
                 non_overlap_pos = d_non_overlap_pos_out.copy_to_host()
 
-                #一百万1.9秒
+
                 cal_del_gpu_same_len_v1[blocks_per_grid_sa, threads_per_block](
                     d_sort_sa, d_non_overlap_pos_out, max_len, d_valid_flag
                 )
@@ -350,7 +350,7 @@ def find_most_frequent_longest_substring(suffix_array, lcp, join_s_int, end_list
             if selected:
                 break
 
-        #根据找到的最大值信息，在gpu更新原始lcp
+
         if max_len<2:
             break
 
@@ -376,17 +376,17 @@ def find_most_frequent_longest_substring(suffix_array, lcp, join_s_int, end_list
 # @cuda.jit
 # def find_father_id(all_start,all_end,ladder_start,father_end_id,father_id):
 #     idx = cuda.grid(1)
-#     # 边界检查，防止越界
+
 #     if idx < ladder_start.shape[0]:
 #         start = ladder_start[idx]
 #         limit = father_end_id[idx]
-#         # 初始化结果为 -1 (未找到)
+
 #         res = -1
 #         for k in range(limit, -1, -1):
-#             # 判断是否在区间内: starts[k] <= val < ends[k]
+
 #             if all_start[k] <= start < all_end[k]:
 #                 res = k
-#                 break  # 找到了最后一个，直接退出循环
+
 
 #         father_id[idx] = res
 
@@ -404,7 +404,7 @@ def find_most_frequent_longest_substring(suffix_array, lcp, join_s_int, end_list
 def find_ladderpath(s_list, model=0, ch=False):
     ch = ch or any(not s.isascii() for s in s_list)
 
-    #获得合并字符串与每字符串终点
+
     end=0
     join_s=''
     end_list=[0]
@@ -489,26 +489,26 @@ def find_ladderpath(s_list, model=0, ch=False):
         return lp,end, ta_ld_dic,basic_blocks
 
 
-#+++++++++++可直接调用的函数++++++++++++++
+
 # def get_lp(s_list,ch=False):
-#     #获得梯径度
+
 #     return find_ladderpath(s_list,0,ch)
 
 # def get_lp_with_w(s_list,ch=False):
-#     #获得梯径度、{梯元:重数}
+
 #     return find_ladderpath(s_list,1,ch)
 
 
-def get_ladderpath(ss, ch=False, show_version=True):  # 输出是梯径的JSON标准格式
-    #输入ss已经是去重之后的list of string
+def get_ladderpath(ss, ch=False, show_version=True):
+
 
     if show_version:
-        print('The version of this ladderpath.py (CUDA GPU version) is:', VERSION_ladderpathpy_cuda)
-        print('The version of this ladderpath JSON format is:', VERSION_lpjson)
+        print('lppack CUDA backend version:', VERSION_ladderpathpy_cuda)
+        print('lpjson version:', VERSION_lpjson)
 
     lp,end, ta_ld_dic,basic_blocks = find_ladderpath(ss, model=2, ch=ch)
 
-    # 标准格式初始化
+
     data = {
         "info": VERSION_lpjson,
         "ladderpath-index": int(lp),
@@ -518,10 +518,8 @@ def get_ladderpath(ss, ch=False, show_version=True):  # 输出是梯径的JSON�
         "basic_building_blocks": sorted(basic_blocks),
         "ladderons": {},
         "targets": {},
-        "duplications_info": {},
-
-        "eta_info": {}
-    } # "input_type": input_type #由主程序加入
+        "duplications_info": {}
+    }
 
     target_dic={}
     ladder_dic={}

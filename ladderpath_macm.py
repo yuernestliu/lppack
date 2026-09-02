@@ -1,5 +1,5 @@
 """
-Version 1.1
+Version 3.0.0
 Authors: ecsLab
 Data: 2026.06.12
 
@@ -18,8 +18,8 @@ import numpy as np
 import pydivsufsort as pyd
 
 
-VERSION_ladderpathpy_macm = "v1.1"
-VERSION_lpjson = "v1.1"  # 保持最新版本
+VERSION_ladderpathpy_macm = "3.0.0"
+VERSION_lpjson = "3.0.0"
 THREADS_PER_GROUP = 256
 
 
@@ -676,12 +676,12 @@ def find_ladderpath(s_list, model=0, ch=False):
 
 
 def get_ladderpath(ss, ch=False, show_version=True):
-    # 输入ss已经是去重之后的list of string
+
     _require_macm()
 
     if show_version:
-        print("The version of this ladderpath.py (Apple Silicon Mac GPU version) is:", VERSION_ladderpathpy_macm)
-        print("The version of this ladderpath JSON format is:", VERSION_lpjson)
+        print("lppack Apple Silicon backend version:", VERSION_ladderpathpy_macm)
+        print("lpjson version:", VERSION_lpjson)
         if not is_native_arm64_python():
             print("Warning: current Python is not native arm64; performance may be limited.")
 
@@ -696,7 +696,6 @@ def get_ladderpath(ss, ch=False, show_version=True):
         "ladderons": {},
         "targets": {},
         "duplications_info": {},
-        "eta_info": {},
     }
 
     target_dic = {}

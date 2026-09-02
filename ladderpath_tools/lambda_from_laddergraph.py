@@ -1,24 +1,25 @@
 """
-Version 2.1.0
+Version 3.0.0
 Authors: ecsLab (Jingwen Zhang et al.)
     revised by Xiaojun Hu
     updated by codex
 Date: 2026.03.31
 
-利用梯图来计算其中若干 targets (leaves) 的 lambda。
+Calculate lambda for selected targets (leaves) in an existing laddergraph.
 
-当前版本相较于 2.0.2 增加了几项显式约束：
-1. `lpjson` 必须来自 `lp.get_ladderpath()` 或 `lp.load_ladderpath_json()`。
-   不允许直接用 `json.load()` 读取梯径 JSON。
-2. 当前版本不支持带 duplicates 的 `lpjson`，即 `duplications_info` 必须为空。
-3. `leaves` 必须是非空列表，且元素类型必须全为 int 或全为 str。
+Public constraints:
+1. `lpjson` must come from `lp.get_ladderpath()` or
+   `lp.load_ladderpath_json()`, not directly from `json.load()`.
+2. The current implementation does not support an `lpjson` with duplicates;
+   `duplications_info` must be empty.
+3. `leaves` must be a non-empty list containing either all integers or all strings.
 """
 
 from .. import ladderpath as lp
 
 
 def get_target_ID(two_leaf_strs0, lpjson):
-    # 找到subset中几个target的序号
+
     strs_subset = two_leaf_strs0.copy()
     ids = []
     for ID, info in lpjson["targets"].items():
@@ -27,12 +28,12 @@ def get_target_ID(two_leaf_strs0, lpjson):
             strs_subset.remove(info[2])
     if len(ids) != len(two_leaf_strs0):
         raise ValueError(
-            "输入的 target 字符串未能全部在 lpjson['targets'] 中匹配到。"
+            "Not all target strings were found in lpjson['targets']."
         )
     return ids
 
 def separate_basic_blocks(COMP):
-    # 把基本单位和梯元分开，返回梯元的id（保留重复）和基本单位的使用个数
+
     new_COMP=[]
     block_count=0
     for i in COMP:
@@ -43,7 +44,7 @@ def separate_basic_blocks(COMP):
     return new_COMP,block_count
 
 def if_id_in_COMP(COMP):
-    # 查看是不是所有的梯元都划完了
+
     for i in COMP:
         if type(i) == int:
             return True
@@ -52,13 +53,13 @@ def if_id_in_COMP(COMP):
 
 def _validate_lpjson_ready(lpjson):
     if not isinstance(lpjson, dict):
-        raise ValueError("lpjson 必须是 dict。")
+        raise ValueError("lpjson must be a dictionary.")
 
     if "targets" not in lpjson or "ladderons" not in lpjson:
-        raise ValueError("lpjson 缺少 'targets' 或 'ladderons' 字段。")
+        raise ValueError("lpjson is missing the 'targets' or 'ladderons' field.")
 
     if not lpjson["targets"]:
-        raise ValueError("lpjson['targets'] 不能为空。")
+        raise ValueError("lpjson['targets'] must not be empty.")
 
     target_key = next(iter(lpjson["targets"].keys()))
     ladderon_key = next(iter(lpjson["ladderons"].keys())) if lpjson["ladderons"] else None
@@ -67,36 +68,37 @@ def _validate_lpjson_ready(lpjson):
         ladderon_key is not None and not isinstance(ladderon_key, int)
     ):
         raise ValueError(
-            "lpjson 的 key 类型不正确。"
-            "请使用 lp.get_ladderpath(...) 或 lp.load_ladderpath_json(...) 获取 lpjson，"
-            "不要直接使用 json.load()。"
+            "lpjson contains keys of the wrong type. "
+            "Use lp.get_ladderpath(...) or lp.load_ladderpath_json(...) to obtain lpjson; "
+            "do not use json.load() directly."
         )
 
     if lpjson.get("duplications_info"):
         raise ValueError(
-            "当前 lambda_from_laddergraph.get() 不支持带 duplicates 的 lpjson。"
-            "请先去重，或使用不含 duplications_info 的梯径对象。"
+            "lambda_from_laddergraph.get() does not currently support an lpjson "
+            "with duplicates. Deduplicate the input or use an object with empty "
+            "duplications_info."
         )
 
 
 def _validate_leaves(leaves):
     if not isinstance(leaves, list) or len(leaves) == 0:
-        raise ValueError("leaves 必须是非空 list。")
+        raise ValueError("leaves must be a non-empty list.")
 
     first = leaves[0]
     if isinstance(first, int):
         if not all(isinstance(x, int) for x in leaves):
-            raise ValueError("leaves 中的元素类型必须一致，不能混用 int 和 str。")
+            raise ValueError("All leaves must have the same type; do not mix integers and strings.")
     elif isinstance(first, str):
         if not all(isinstance(x, str) for x in leaves):
-            raise ValueError("leaves 中的元素类型必须一致，不能混用 int 和 str。")
+            raise ValueError("All leaves must have the same type; do not mix integers and strings.")
     else:
-        raise ValueError("leaves 只允许是 int 列表或 str 列表。")
+        raise ValueError("leaves must contain only integers or only strings.")
 
     if len(set(leaves)) != len(leaves):
         raise ValueError(
-            "当前 lambda_from_laddergraph.get() 不支持重复 leaves。"
-            "请先去重或明确 duplicates 的语义后再计算。"
+            "lambda_from_laddergraph.get() does not support repeated leaves. "
+            "Deduplicate leaves before calculating lambda."
         )
 
 
@@ -149,17 +151,17 @@ def _validate_leaves(leaves):
 #     return count
 
     
-def get(leaves, lpjson):  # 支持任意数量的 leaf
+def get(leaves, lpjson):
     _validate_leaves(leaves)
     _validate_lpjson_ready(lpjson)
 
     lp.fill_lpjson_STR(lpjson)
 
-    # 判断是字符串形式还是id形式
+
     if isinstance(leaves[0], int):
         for leaf in leaves:
             if leaf not in lpjson['targets']:
-                raise ValueError(f"输入的 target ID {leaf} 不在 lpjson['targets'] 中。")
+                raise ValueError(f"Target ID {leaf} is not present in lpjson['targets'].")
         ids = leaves
     else:
         ids = get_target_ID(leaves.copy(), lpjson)

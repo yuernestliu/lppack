@@ -1,5 +1,5 @@
 """
-Version 1.4
+Version 3.0.0
 Author: codex
 Date: 2026.04.09
 
@@ -15,7 +15,7 @@ This module only does four things:
 
 Example:
 
-    import ladderpath_tools.phylo as lp_phylo
+    import lppack.ladderpath_tools.phylo as lp_phylo
 
     lp_phylo.phylo(
         distance_table,
@@ -209,7 +209,7 @@ def _normalize_figure_file_name(fig_file_name: str) -> str:
 
 
 def _clean_tiny_branch_lengths(tree, atol: float = 1e-12) -> None:
-    # 清理浮点误差导致的 -0.0 / 极小负数分支长度
+
     for clade in tree.find_clades():
         branch_length = clade.branch_length
         if branch_length is not None and abs(branch_length) < atol:
@@ -325,7 +325,7 @@ def phylo(
     except ImportError as exc:
         raise ImportError(
             "phylo() requires matplotlib, scipy, and Biopython (`Bio`). "
-            "Install it with: pip install biopython"
+            "Reinstall lppack to restore its required dependencies."
         ) from exc
 
     if verbose:
@@ -391,7 +391,7 @@ def phylo(
             print(f"Figure file saved to: {normalized_fig_file_name}")
 
     if show_plot:
-        # 在纯 Agg 后端下 plt.show() 会产生无意义警告；Notebook inline/backend 正常显示
+
         backend = matplotlib.get_backend().lower()
         if backend != "agg":
             plt.show()

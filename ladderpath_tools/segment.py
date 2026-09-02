@@ -1,6 +1,6 @@
 """Unified segmentation utilities for vocab-based tokenization.
 
-Version 1.2.0
+Version 3.0.0
 Date: 2026.04.01
 
 This module provides a small public API:
@@ -428,9 +428,9 @@ def segment(
     """Public convenience wrapper.
 
     Examples:
-        segment(vocab, "南京市长江大桥")
-        segment(vocab, "南京市长江大桥", output="ids")
-        segment(vocab, ["文本1", "文本2"], method="max_matching")
+        segment(vocab, "Chapter 1 Loomings")
+        segment(vocab, "Chapter 1 Loomings", output="ids")
+        segment(vocab, ["text 1", "text 2"], method="max_matching")
     """
 
     segmenter = Segmenter(vocab, **kwargs)

@@ -1,6 +1,6 @@
 """Tokenizer wrapper built on top of segment.py.
 
-Version 1.4.0
+Version 3.0.0
 Date: 2026.04.01
 """
 
@@ -11,9 +11,9 @@ from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Union
 
 try:
-    from segment import SegmentResult, SegmentVocab, Segmenter, load_vocab
-except ImportError:  # pragma: no cover
     from .segment import SegmentResult, SegmentVocab, Segmenter, load_vocab
+except ImportError:  # pragma: no cover - standalone module fallback
+    from segment import SegmentResult, SegmentVocab, Segmenter, load_vocab
 
 
 VocabSource = Union[SegmentVocab, str, Path, Mapping[str, Any], Sequence[Any]]

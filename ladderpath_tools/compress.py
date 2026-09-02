@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
 
 """
-Version 3.4
+Version 3.0.0
 Authors: ecsLab & Codex
 Date: 26y0508
 
-Lightweight compression entrypoint intended to replace
-`lp_developers.ladderpath_tools.compress`.
+Compression entrypoint for `lppack.ladderpath_tools.compress`.
 
 Main policy:
     - Keep only the latest mainline compression path here.
     - Keep the public API short and readable.
-    - Move experimental model families to `辅助脚本/compress_experimental_v31.py`.
+    - Keep experimental model families outside the public entry point.
 
 Public API:
     - encoding2streams(lpjson, ...) -> encoded_streams
@@ -54,7 +53,7 @@ VALID_TOKEN_TYPE_MODES = {
 DEFAULT_TOKEN_TYPE_MODE = TOKEN_TYPE_MODE_PREV1_CONTEXT
 
 MAGIC = b"LPE1"
-VERSION = 1
+LPE_FORMAT_VERSION = 1
 STREAM_BITPACK = 0
 STREAM_HUFFMAN = 1
 STREAM_DENSE_HUFFMAN = 2
@@ -69,7 +68,7 @@ ARITH_THREE_QUARTER = 3 << 30
 
 
 def _append_optional_repo_root() -> None:
-    repo_root = os.environ.get("LP_DEVELOPERS_REPO_ROOT")
+    repo_root = os.environ.get("LPPACK_REPO_ROOT")
     if repo_root and repo_root not in sys.path:
         sys.path.append(repo_root)
 
@@ -83,12 +82,12 @@ def import_ladderpath():
         _append_optional_repo_root()
         sys.modules.setdefault("graphviz", types.SimpleNamespace())
         try:
-            import lp_developers.ladderpath as lp
+            import lppack.ladderpath as lp
         except Exception as exc:
             raise ImportError(
-                "Could not import lp_developers.ladderpath. Install lp_developers, "
-                "run this module inside the lp_developers package, or set "
-                "LP_DEVELOPERS_REPO_ROOT to the repository root."
+                "Could not import lppack.ladderpath. Install lppack, "
+                "run this module inside the lppack package, or set "
+                "LPPACK_REPO_ROOT to the repository parent directory."
             ) from exc
 
         return lp
@@ -103,12 +102,12 @@ def import_sortout():
         _append_optional_repo_root()
         sys.modules.setdefault("graphviz", types.SimpleNamespace())
         try:
-            import lp_developers.ladderpath_tools.sortout as lp_sortout
+            import lppack.ladderpath_tools.sortout as lp_sortout
         except Exception as exc:
             raise ImportError(
-                "Could not import lp_developers.ladderpath_tools.sortout. Install "
-                "lp_developers, run this module inside the lp_developers package, "
-                "or set LP_DEVELOPERS_REPO_ROOT to the repository root."
+                "Could not import lppack.ladderpath_tools.sortout. Install "
+                "lppack, run this module inside the lppack package, "
+                "or set LPPACK_REPO_ROOT to the repository parent directory."
             ) from exc
 
         return lp_sortout
@@ -910,7 +909,7 @@ def _encode_entropy_payload(
 ) -> bytes:
     out = bytearray()
     out.extend(MAGIC)
-    out.append(VERSION)
+    out.append(LPE_FORMAT_VERSION)
 
     sep_bytes = entropy_json["sep"].encode("utf-8")
     out.extend(codec.encode_varint(len(sep_bytes)))
@@ -971,7 +970,7 @@ def encoding2streams(
         compressed_list, reindex_metadata = _reindex_compressed_list_latest(compressed_list)
 
     encoded_streams = _build_entropy_ready_json(compressed_list)
-    encoded_streams["compress_py_profile"] = "lite_v33_mainline"
+    encoded_streams["compress_py_profile"] = "lppack_3.0.0"
     encoded_streams["sort_method"] = resolved_sort_method
     encoded_streams["reindex"] = reindex_metadata if reindex_metadata is not None else {"name": "none"}
     if top_n is not None:
