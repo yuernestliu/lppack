@@ -202,11 +202,11 @@ Ladderpath 与以下论文相关：
 
 ## 引用
 
-如果在研究中使用本软件，请同时引用相关 Ladderpath 论文和软件版本。机器可读的软件引用信息见 [CITATION.cff](CITATION.cff)。本版本常用的 BibTeX 引用格式如下：
+如果在研究中使用本软件，请引用软件版本，并根据实际使用的方法或应用，从上方[相关论文](#相关论文)中选择相应论文引用。机器可读的软件引用信息见 [CITATION.cff](CITATION.cff)。本版本常用的 BibTeX 引用格式如下：
 
 ```bibtex
 @software{lppack_3_0_0,
-  author  = {{ecsLab}},
+  author  = {Liu, Yu and Zhang, Zecheng and Zhu, Hu and Deng, Xiaodong and Zhang, Jingwen and Que, Linjie and {ecsLab}},
   title   = {lppack: Ladderpath Python Toolkit},
   year    = {2026},
   version = {3.0.0},

@@ -1,10 +1,24 @@
 cff-version: 1.2.0
 message: >-
-  If you use lppack in research, please cite this software release and the
-  relevant Ladderpath publication.
+  If you use lppack in research, please cite this software release.
+  As appropriate, also cite the publications relevant to the methods or
+  applications you use, listed in the README Related research section.
 title: "lppack: Ladderpath Python Toolkit"
 type: software
+# Project lead, named major contributors, and the collective development team.
 authors:
+  - family-names: Liu
+    given-names: Yu
+  - family-names: Zhang
+    given-names: Zecheng
+  - family-names: Zhu
+    given-names: Hu
+  - family-names: Deng
+    given-names: Xiaodong
+  - family-names: Zhang
+    given-names: Jingwen
+  - family-names: Que
+    given-names: Linjie
   - name: "ecsLab"
 abstract: >-
   A Python toolkit for discovering nested hierarchical structure in sequences
@@ -20,7 +34,3 @@ keywords:
   - sequence analysis
   - compression
   - phylogeny
-
-# TODO: Add the confirmed authors, venue, pages, and DOI of the primary
-# Ladderpath paper as `preferred-citation` when the bibliographic record is
-# supplied.

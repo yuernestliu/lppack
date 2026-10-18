@@ -202,11 +202,11 @@ Ladderpath is associated with the following publications:
 
 ## Citation
 
-If you use this software, cite the relevant Ladderpath paper and the software release. Machine-readable software citation metadata is provided in [CITATION.cff](CITATION.cff). A commonly used BibTeX citation for this release is:
+If you use this software, cite the software release. As appropriate, also cite the publications relevant to the methods or applications you use from [Related research](#related-research). Machine-readable software citation metadata is provided in [CITATION.cff](CITATION.cff). A commonly used BibTeX citation for this release is:
 
 ```bibtex
 @software{lppack_3_0_0,
-  author  = {{ecsLab}},
+  author  = {Liu, Yu and Zhang, Zecheng and Zhu, Hu and Deng, Xiaodong and Zhang, Jingwen and Que, Linjie and {ecsLab}},
   title   = {lppack: Ladderpath Python Toolkit},
   year    = {2026},
   version = {3.0.0},
