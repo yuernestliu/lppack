@@ -1,6 +1,6 @@
 # lppack
 
-**梯径 Ladderpath Python 工具包 — 版本 3.0.0**
+**梯径 Ladderpath Python 工具包 — 版本 3.0.1**
 
 [English README](README.md) · [中文操作手册](docs/user-guide.zh-CN.md) · [English user guide](docs/user-guide.en.md) · [版本记录](docs/CHANGELOG.md) · [引用信息](CITATION.cff)
 
@@ -173,7 +173,7 @@ graph = lp.draw_laddergraph(
 
 ## `lpjson` 与可复现性
 
-软件发行版本和 `lpjson` 格式版本均为 `3.0.0`。保存的对象会在 `lpjson["info"]` 中记录格式版本。
+软件发行版本为 `3.0.1`，`lpjson` 格式版本仍为 `3.0.0`。保存的对象会在 `lpjson["info"]` 中记录格式版本。
 
 CPU 后端在内部出现等价候选时可能选择不同结果，因此重复运行不保证得到逐字节完全一致的 `lpjson`。CUDA 和 Apple Silicon 后端的设计目标是同一输入、同一后端产生确定性结果。如果工作流要求跨后端逐字节一致，应针对实际数据进行验证。
 
@@ -205,11 +205,11 @@ Ladderpath 与以下论文相关：
 如果在研究中使用本软件，请引用软件版本，并根据实际使用的方法或应用，从上方[相关论文](#相关论文)中选择相应论文引用。机器可读的软件引用信息见 [CITATION.cff](CITATION.cff)。本版本常用的 BibTeX 引用格式如下：
 
 ```bibtex
-@software{lppack_3_0_0,
+@software{lppack_3_0_1,
   author  = {Liu, Yu and Zhang, Zecheng and Zhu, Hu and Deng, Xiaodong and Zhang, Jingwen and Que, Linjie and {ecsLab}},
   title   = {lppack: Ladderpath Python Toolkit},
   year    = {2026},
-  version = {3.0.0},
+  version = {3.0.1},
   url     = {https://github.com/yuernestliu/lppack}
 }
 ```
@@ -217,6 +217,11 @@ Ladderpath 与以下论文相关：
 ## 许可证
 
 本项目使用 [Apache License 2.0](LICENSE)。
+
+## 3.0.1 更新
+
+- 修复 `draw_laddergraph` 中兼作梯元的 target 忽略自定义名称的问题，现在可正确显示 `& t_1` 等标签。
+- `lpjson` 格式保持 `3.0.0` 不变。
 
 ## 3.0.0 主要内容
 

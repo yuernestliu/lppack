@@ -1,7 +1,7 @@
 """
-Version 3.0.0
+Version 3.0.1
 Authors: ecsLab
-Data: 2026.06.12
+Date: 2026.11.02
 
 Apple Silicon Mac GPU backend for ladderpath.
 
@@ -18,7 +18,7 @@ import numpy as np
 import pydivsufsort as pyd
 
 
-VERSION_ladderpathpy_macm = "3.0.0"
+VERSION_ladderpathpy_macm = "3.0.1"
 VERSION_lpjson = "3.0.0"
 THREADS_PER_GROUP = 256
 

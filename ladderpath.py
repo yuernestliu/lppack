@@ -1,12 +1,12 @@
 """
-Version 3.0.0
+Version 3.0.1
 Authors: ecsLab
-Data: 2026.06.12
+Date: 2026.11.02
 
 CUDA and macm backends use Unicode character coordinates for non-ASCII input.
 """
 
-VERSION_ladderpathpy = '3.0.0'
+VERSION_ladderpathpy = '3.0.1'
 VERSION_lpjson = '3.0.0'
 
 

@@ -1,8 +1,8 @@
-# lppack 3.0.0 User Guide
+# lppack 3.0.1 User Guide
 
 [中文操作手册](user-guide.zh-CN.md) · [Project README](../README.md)
 
-This guide documents the public interfaces in `lppack` 3.0.0 and the `lpjson` 3.0.0 format.
+This guide documents the public interfaces in `lppack` 3.0.1 and the `lpjson` 3.0.0 format.
 
 ## Contents
 
@@ -97,7 +97,7 @@ python -c "import lppack; print(lppack.__version__, lppack.LPJSON_VERSION)"
 Expected output:
 
 ```text
-3.0.0 3.0.0
+3.0.1 3.0.0
 ```
 
 ## 2. Core concepts
@@ -549,7 +549,7 @@ Use the installed public package:
 import lppack as lp
 ```
 
-Do not add a private checkout path to `sys.path`. Select the backend through the `mode` parameter. Duplicate list entries are no longer accepted; use a multiplicity dictionary. Both the software version and the `lpjson` format identifier are `3.0.0`.
+Do not add a private checkout path to `sys.path`. Select the backend through the `mode` parameter. Duplicate list entries are no longer accepted; use a multiplicity dictionary. The software version is `3.0.1`; the `lpjson` format identifier remains `3.0.0`.
 
 Older saved objects may use a different schema identifier and should not be assumed byte-compatible with 3.0.0. Validate required fields before using them in a 3.0.0 workflow.
 

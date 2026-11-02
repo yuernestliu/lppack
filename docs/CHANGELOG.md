@@ -2,6 +2,20 @@
 
 All notable public changes to `lppack` are documented here.
 
+## 3.0.1 — 2026-11-02
+
+### Fixed
+
+- `draw_laddergraph` now uses `TargetNames_UserDefined` for targets that are also ladderons, displaying labels such as `& t_1` and `& t_2` in all drawing styles. Default labels remain unchanged when custom names are omitted.
+
+### Changed
+
+- Ignore Python `__pycache__` directories and compiled bytecode in Git.
+
+### Compatibility notes
+
+- The `lpjson` format remains at `3.0.0`; the compression format and profile are unchanged.
+
 ## 3.0.0 — 2026-09-02
 
 ### Added

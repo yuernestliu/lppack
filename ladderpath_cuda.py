@@ -1,7 +1,7 @@
 """
-Version 3.0.0
+Version 3.0.1
 Authors: Hu Zhu
-Data: 2026.06.12
+Date: 2026.11.02
 
 CUDA GPU backend for Ladderpath.
 This module receives unique targets; the public entry point handles multiplicity.
@@ -20,7 +20,7 @@ import pydivsufsort as pyd
 os.environ['NUMBA_CUDA_LOW_OCCUPANCY_WARNINGS'] = '0'
 
 
-VERSION_ladderpathpy_cuda = '3.0.0'
+VERSION_ladderpathpy_cuda = '3.0.1'
 VERSION_lpjson = '3.0.0'
 
 

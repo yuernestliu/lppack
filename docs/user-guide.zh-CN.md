@@ -1,8 +1,8 @@
-# lppack 3.0.0 中文操作手册
+# lppack 3.0.1 中文操作手册
 
 [English user guide](user-guide.en.md) · [项目 README](../README.zh-CN.md)
 
-本文档说明 `lppack` 3.0.0 的公开接口和 `lpjson` 3.0.0 标准格式。
+本文档说明 `lppack` 3.0.1 的公开接口和 `lpjson` 3.0.0 标准格式。
 
 ## 目录
 
@@ -97,7 +97,7 @@ python -c "import lppack; print(lppack.__version__, lppack.LPJSON_VERSION)"
 预期输出：
 
 ```text
-3.0.0 3.0.0
+3.0.1 3.0.0
 ```
 
 ## 2. 核心概念
@@ -549,7 +549,7 @@ tree = phylo.phylo(
 import lppack as lp
 ```
 
-不再把私有仓库路径加入 `sys.path`。通过 `mode` 参数选择后端。list 中不再允许重复 target，应改用重数字典。软件版本和 `lpjson` 格式标识均为 `3.0.0`。
+不再把私有仓库路径加入 `sys.path`。通过 `mode` 参数选择后端。list 中不再允许重复 target，应改用重数字典。软件版本为 `3.0.1`，`lpjson` 格式标识仍为 `3.0.0`。
 
 旧版本保存的对象可能采用不同格式标识，不能默认与 3.0.0 逐字节兼容。在 3.0.0 工作流中使用前，应检查所需字段。
 

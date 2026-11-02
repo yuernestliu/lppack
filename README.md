@@ -1,6 +1,6 @@
 # lppack
 
-**Ladderpath Python Toolkit — version 3.0.0**
+**Ladderpath Python Toolkit — version 3.0.1**
 
 [中文 README](README.zh-CN.md) · [English user guide](docs/user-guide.en.md) · [中文操作手册](docs/user-guide.zh-CN.md) · [Changelog](docs/CHANGELOG.md) · [Citation](CITATION.cff)
 
@@ -173,7 +173,7 @@ Only image rendering requires the Graphviz system executable; all core Ladderpat
 
 ## `lpjson` and reproducibility
 
-The software release and `lpjson` format are both version `3.0.0`. Saved objects record the format in `lpjson["info"]`.
+The software release is version `3.0.1`; the `lpjson` format remains version `3.0.0`. Saved objects record the format in `lpjson["info"]`.
 
 The CPU backend may select different equivalent candidates when internal ties occur, so repeated runs are not guaranteed to produce byte-identical `lpjson` objects. The CUDA and Apple Silicon backends are designed to be deterministic for the same input and backend. Validate exact cross-backend equality for any workflow that depends on byte-for-byte identity.
 
@@ -205,11 +205,11 @@ Ladderpath is associated with the following publications:
 If you use this software, cite the software release. As appropriate, also cite the publications relevant to the methods or applications you use from [Related research](#related-research). Machine-readable software citation metadata is provided in [CITATION.cff](CITATION.cff). A commonly used BibTeX citation for this release is:
 
 ```bibtex
-@software{lppack_3_0_0,
+@software{lppack_3_0_1,
   author  = {Liu, Yu and Zhang, Zecheng and Zhu, Hu and Deng, Xiaodong and Zhang, Jingwen and Que, Linjie and {ecsLab}},
   title   = {lppack: Ladderpath Python Toolkit},
   year    = {2026},
-  version = {3.0.0},
+  version = {3.0.1},
   url     = {https://github.com/yuernestliu/lppack}
 }
 ```
@@ -217,6 +217,11 @@ If you use this software, cite the software release. As appropriate, also cite t
 ## License
 
 Licensed under the [Apache License 2.0](LICENSE).
+
+## Changes in 3.0.1
+
+- Fixed custom target names in `draw_laddergraph` for targets that are also ladderons (for example, `& t_1`).
+- The `lpjson` format remains unchanged at `3.0.0`.
 
 ## Highlights in 3.0.0
 

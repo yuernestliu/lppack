@@ -23,8 +23,8 @@ authors:
 abstract: >-
   A Python toolkit for discovering nested hierarchical structure in sequences
   and representing it as a standard Ladderpath JSON object.
-version: 3.0.0
-date-released: "2026-09-02"
+version: 3.0.1
+date-released: "2026-11-02"
 license: Apache-2.0
 repository-code: "https://github.com/yuernestliu/lppack"
 url: "https://github.com/yuernestliu/lppack"

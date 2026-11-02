@@ -1,7 +1,7 @@
 """
-Version 3.0.0
+Version 3.0.1
 Authors: ecsLab
-Data: 2026.06.12
+Date: 2026.11.02
 """
 
 from graphviz import Digraph
@@ -54,13 +54,13 @@ def _build_lookup_tables(lpjson):
     return targets, ladderons, targets_2ID, ladderons_2ID, bbbs_2ID, multi_bbb, multi_ladderons
 
 
-def _target_names(TargetNames_UserDefined, targets_2ID):
+def _target_names(TargetNames_UserDefined, targets_2ID, ladderons_2ID):
     if TargetNames_UserDefined is not None:
         return TargetNames_UserDefined
 
     names = {}
     for target, ID in targets_2ID.items():
-        names[ID] = str(ID)
+        names[ID] = str(ladderons_2ID.get(target, ID))
     return names
 
 
@@ -88,7 +88,7 @@ def _multiplicity_suffix(multiplicity):
 
 def _target_label(target, ID, ladderons_2ID, TargetNames_UserDefined, onlyshowtargetid, show_node_size):
     if target in ladderons_2ID:
-        return f"& {ladderons_2ID[target]}"
+        return f"& {TargetNames_UserDefined[ID]}"
 
     target_name = TargetNames_UserDefined[ID] if onlyshowtargetid else target
     return f"{target_name}{_node_size_suffix(target, show_node_size)}"
@@ -225,7 +225,7 @@ def draw_laddergraph(lpjson, show_longer_than=0,
         return
 
     targets, ladderons, targets_2ID, ladderons_2ID, bbbs_2ID, multi_bbb, multi_ladderons = _build_lookup_tables(lpjson)
-    TargetNames_UserDefined = _target_names(TargetNames_UserDefined, targets_2ID)
+    TargetNames_UserDefined = _target_names(TargetNames_UserDefined, targets_2ID, ladderons_2ID)
 
     g = _new_graph(rankdir, figsize)
     _draw_targets(
